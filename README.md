@@ -32,7 +32,7 @@ Bridge is a post-compile maven plugin that injects new advanced functionality in
 </pluginRepositories>
 
 <!-- ensures the api and maven plugin use the same version -->
-<properties><!-- remember to replace this value this with a real build id! -->
+<properties> <!-- don't forget to replace this value with a real build id! -->
     <bridge.version>00w00a</bridge.version>
 </properties>
 
@@ -64,4 +64,3 @@ Bridge is a post-compile maven plugin that injects new advanced functionality in
     </plugins>
 </build>
 ```
-<br>
