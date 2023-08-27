@@ -2,6 +2,7 @@ package bridge.objects;
 
 public class InvocationTest {
     public void test() throws Throwable {
+        Invocations.THRW();
         Invocations.JUMP();
         Invocations.SL01();
         Invocations.SL02();

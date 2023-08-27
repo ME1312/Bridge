@@ -263,6 +263,7 @@ final class InvocationVisitor extends AnalyzerAdapter {
                 @Override
                 public void visitMethodInsn(int opcode, String owner, String name, String descriptor, boolean isInterface) {
                     if (stack.size() == one && descriptor.endsWith(")V")) {
+                        if (state == Boolean.TRUE) stack.set(one - 3, stack.get(one - 1));
                         InvocationVisitor.this.mv = mv;
                         ++caller.adjustments;
                     } else {

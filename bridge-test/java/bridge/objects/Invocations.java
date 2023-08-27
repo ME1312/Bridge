@@ -13,6 +13,17 @@ class Invocations {
     private static final Super generic = Dummy.s_obj = instance.v_obj = instance;
     private static final short label = 420;
 
+    // unchecked exception handling test
+    static void THRW() {
+        try {
+            Unchecked.<NonException>check();
+            Jester.sneak();
+            assert false;
+        } catch (NonException e) {
+          //return;
+        }
+    }
+
     // jump & label test
     @SuppressWarnings({"ConstantConditions", "ThrowableNotThrown"})
     static void JUMP() {
