@@ -12,7 +12,7 @@ Bridge is a post-compile maven plugin that injects new advanced functionality in
 * [**Optional stripping of debug metadata**](https://github.com/ME1312/Bridge/wiki/Features#removing-debug-metadata)
 
 *This project could always benefit from your submission of [additional automated testing](https://github.com/ME1312/Bridge/issues/1)!*
-<br>
+<br><br>
 
 ```xml
 <!-- required to access the api -->
@@ -64,5 +64,4 @@ Bridge is a post-compile maven plugin that injects new advanced functionality in
     </plugins>
 </build>
 ```
-<br><br>
 <br><br>
