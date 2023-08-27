@@ -64,4 +64,4 @@ Bridge is a post-compile maven plugin that injects new advanced functionality in
     </plugins>
 </build>
 ```
-<br><br>
+<br>
