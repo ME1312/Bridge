@@ -8,10 +8,11 @@ import static org.objectweb.asm.Opcodes.*;
 
 public class HierarchyScanner extends ClassVisitor {
     protected final TypeMap types;
-    private KnownType type;
-    protected Object adjust;
+    protected int access;
+    protected Type type;
     protected String extended;
     protected String[] implemented;
+    protected Object adjust;
 
     public HierarchyScanner(TypeMap types) {
         super(Opcodes.ASM9);
@@ -20,16 +21,18 @@ public class HierarchyScanner extends ClassVisitor {
 
     @Override
     public void visit(int version, int access, String name, String signature, String extended, String[] implemented) {
-        (this.type = types.map.computeIfAbsent(Type.getObjectType(name), KnownType::new)).isInterface = (access & ACC_INTERFACE) != 0;
+        this.access = access;
+        this.type = Type.getObjectType(name);
         this.extended = extended;
         this.implemented = implemented;
     }
 
     @Override
     public void visitEnd() {
-        KnownType type;
-        (type = this.type).adjust = adjust;
+        KnownType type = types.map.computeIfAbsent(this.type, KnownType::new);
+        type.isInterface = (access & ACC_INTERFACE) != 0;
         type.extended = (extended == null)? types.get(Object.class) : types.load(Type.getObjectType(extended));
+        type.adjust = adjust;
 
         if (implemented != null && implemented.length != 0) {
             KnownType[] types = new KnownType[implemented.length];

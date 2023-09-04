@@ -4,6 +4,7 @@ package bridge;
  * A class that can be used to access field &amp; method bridges (and other things too)
  * @implNote Imaginary objects defined within and returned by this class may not be stored. In other words, you are required to use them in the same statement they were created in for your code to compile correctly.
  */
+@SuppressWarnings("InnerClassMayBeStatic")
 public final class Invocation {
 
     private static native <T> T $();
@@ -32,7 +33,7 @@ public final class Invocation {
     /**
      * Starts a direct reference to something that belongs to an instance of an object
      *
-     * @implNote This will attempt to determine the object type automatically.
+     * @implNote Calling this overload will cause the object type to be determined automatically.
      * @param instance Object instance
      */
     public Invocation(@Polymorphic Object instance) {}
@@ -54,13 +55,6 @@ public final class Invocation {
     public Invocation(String type, Object instance) {}
 
     /**
-     * Performs a direct type-compatibility check using the given arguments
-     *
-     * @return The actual boolean response.
-     */
-    public boolean ofInstanceOf() { return $(); }
-
-    /**
      * Creates a direct reference to a class
      *
      * @return An actual class reference.
@@ -68,8 +62,17 @@ public final class Invocation {
     public Class<?> ofClassLiteral() { return $(); }
 
     /**
+     * Creates a direct type-compatibility check
+     *
+     * @implNote This operation requires instance access.
+     * @return The actual boolean response.
+     */
+    public boolean ofInstanceOf() { return $(); }
+
+    /**
      * Creates a direct reference to a constructor
      *
+     * @implNote This operation requires static access.
      * @return An imaginary reference for you to execute your request with.
      */
     public Executor ofConstructor() { return $(); }
@@ -77,7 +80,7 @@ public final class Invocation {
     /**
      * Creates a direct reference to a method
      *
-     * @implNote This will attempt to determine the method return type automatically.
+     * @implNote Calling this overload will cause the method return type to be determined automatically.
      * @param name Method name constant &ndash; no dynamic values or string manipulation is permitted here.
      * @return An imaginary reference for you to execute your request with.
      */
@@ -104,13 +107,13 @@ public final class Invocation {
     /**
      * A class that is used to execute method invocations
      */
-    public static final class Executor {
+    public final class Executor {
         private Executor() {}
 
         /**
          * Adds an argument to the stack
          *
-         * @implNote This will attempt to determine the parameter type automatically.
+         * @implNote Calling this overload will cause the parameter type to be determined automatically.
          * @param argument Argument value
          * @return An imaginary reference for you to continue executing your request with.
          */
@@ -169,7 +172,7 @@ public final class Invocation {
     /**
      * Creates a direct reference to a field
      *
-     * @implNote This will attempt to determine the field type automatically.
+     * @implNote Calling this overload will cause the field type to be determined automatically.
      * @param name Field name constant &ndash; no dynamic values or string manipulation is permitted here.
      * @return An imaginary reference for you to execute your request with.
      */
@@ -196,7 +199,7 @@ public final class Invocation {
     /**
      * A class that is used to execute field invocations
      */
-    public static final class Accessor {
+    public final class Accessor {
         private Accessor() {}
 
         /**

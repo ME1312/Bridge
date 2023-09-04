@@ -620,7 +620,7 @@ final class InvocationVisitor extends AnalyzerAdapter {
                                                 } else {
                                                     mv.visitInsn(DUP);
                                                     mv.visitFieldInsn(GETFIELD, this.owner.type.getInternalName(), this.name, returns.type.getDescriptor());
-                                                    if (size(returns) != 1) {
+                                                    if (size(returns) != 1) { // use switch(pair()) instead if new data categories are added
                                                         if (size != 1) {
                                                             mv.visitInsn(DUP2_X1);
                                                             mv.visitInsn(POP2);

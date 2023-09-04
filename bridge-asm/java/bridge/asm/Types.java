@@ -130,6 +130,10 @@ public final class Types {
         return PRIMITIVE_SORT.getOrDefault(type, type.getSort());
     }
 
+    private static int pair(int a, int b) {
+        return (a += b) * (a + 1) / 2 + b;
+    }
+
     public static Class<?> load(Type type) throws ClassNotFoundException {
         return load(null, type);
     }
