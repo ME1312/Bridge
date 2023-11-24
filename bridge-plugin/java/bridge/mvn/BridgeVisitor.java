@@ -20,8 +20,7 @@ final class BridgeVisitor extends ClassVisitor {
     private boolean isInterface, clinit, init;
     final TypeMap types;
 
-    KnownType type;
-    TypeAdjustment adjust;
+    AdjustedType type;
     HashMap<Integer, Boolean> forks = new HashMap<>();
     String adopt, name, src = "Unknown Source";
     int version, bridges, invocations, adjustments;
@@ -33,19 +32,16 @@ final class BridgeVisitor extends ClassVisitor {
 
     @Override
     public void visit(int version, int access, String name, String signature, String extended, String[] implemented) {
-        KnownType type = this.type = types.load(Type.getObjectType(this.name = name));
-        TypeAdjustment adjust = this.adjust = (TypeAdjustment) type.adjustments();
-        if (adjust != null) {
-            if (adjust.adopt) {
-                KnownType[] interfaces = type.interfaces();
-                extended = adopt = type.supertype().type.getInternalName();
-                if (implemented.length != interfaces.length) implemented = new String[interfaces.length];
-                for (int i = 0; i < interfaces.length; ++i) implemented[i] = interfaces[i].type.getInternalName();
-                signature = adjust.signature;
-            }
-            if (adjust.synthetic.contains("")) {
-                access |= ACC_SYNTHETIC;
-            }
+        AdjustedType type = this.type = (AdjustedType) types.load(Type.getObjectType(this.name = name));
+        if (type.adopting) {
+            KnownType[] interfaces = type.interfaces();
+            extended = adopt = type.supertype().type.getInternalName();
+            if (implemented.length != interfaces.length) implemented = new String[interfaces.length];
+            for (int i = 0; i < interfaces.length; ++i) implemented[i] = interfaces[i].type.getInternalName();
+            signature = type.signature;
+        }
+        if (type.synthetic.contains("")) {
+            access |= ACC_SYNTHETIC;
         }
         this.isInterface = (access & ACC_INTERFACE) != 0;
         this.forks.put(this.version = version - 44, Boolean.FALSE);
@@ -82,7 +78,7 @@ final class BridgeVisitor extends ClassVisitor {
 
     @Override
     public FieldVisitor visitField(int access, String name, String descriptor, String signature, Object value) {
-        if (adjust != null && adjust.synthetic.contains(name)) access |= ACC_SYNTHETIC;
+        if (type.synthetic.contains(name)) access |= ACC_SYNTHETIC;
         return new Field(access, name, descriptor, signature, value) {
             private ArrayList<BridgeAnnotation.Data> bridges;
 
@@ -134,7 +130,7 @@ final class BridgeVisitor extends ClassVisitor {
     }
 
     public MethodVisitor visitMethod(int $, String name, String descriptor, String signature, String[] exceptions) {
-        final int access = (adjust != null && adjust.synthetic.contains(name + descriptor))? $ | ACC_SYNTHETIC : $;
+        final int access = (type.synthetic.contains(name + descriptor))? $ | ACC_SYNTHETIC : $;
         return new InvocationVisitor(this, access, name, descriptor, new MethodVisitor(ASM9, super.visitMethod(access, name, descriptor, signature, exceptions)) {
             private final KnownType returns = types.load(Type.getReturnType(descriptor));
             private ArrayList<BridgeAnnotation.Data> bridges;

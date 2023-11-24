@@ -75,9 +75,4 @@ public final class ArrayType extends KnownType {
     public boolean isArray() {
         return true;
     }
-
-    @Override
-    public Optional<ArrayType> asArray() {
-        return Optional.of(this);
-    }
 }

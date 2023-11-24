@@ -5,15 +5,14 @@ import org.objectweb.asm.Type;
 import java.util.*;
 
 public class KnownType {
-    static final KnownType[] EMPTY = new KnownType[0];
+    protected static final KnownType[] EMPTY = new KnownType[0];
     private Object search;
     public final Type type;
-    KnownType extended;
-    KnownType[] implemented;
-    boolean isInterface;
-    Object adjust;
+    protected KnownType extended;
+    protected KnownType[] implemented;
+    protected boolean isInterface;
 
-    KnownType(Type anonymous) {
+    protected KnownType(Type anonymous) {
         this.type = Objects.requireNonNull(anonymous);
     }
 
@@ -57,10 +56,6 @@ public class KnownType {
         } else {
             return false;
         }
-    }
-
-    public Object adjustments() {
-        return adjust;
     }
 
     public KnownType supertype() {
@@ -110,10 +105,6 @@ public class KnownType {
         return false;
     }
 
-    public Optional<ArrayType> asArray() {
-        return Optional.empty();
-    }
-
     private static final int INDENT = 4;
     private StringBuilder newline(StringBuilder builder, int indent) {
         builder.append('\n');
@@ -143,22 +134,8 @@ public class KnownType {
             newline(builder, indent -= INDENT).append('}');
         }
 
-        if (isArray()) {
+        if (this instanceof ArrayType) {
             ((ArrayType) this).element.toString(newline(builder, indent).append("return "), indent);
-        }
-
-        Object adjust = this.adjust;
-        if (adjust != null) {
-            String string = adjust.toString();
-            Class<?> type = adjust.getClass();
-            String hash = Integer.toHexString(adjust.hashCode());
-            newline(builder, indent).append("continue ").append(type.getTypeName()).append(" 0x").append(hash.toUpperCase(Locale.ROOT)).append(" {");
-            if (string != null && !string.equals(type.getName() + '@' + hash)) {
-                StringBuilder indentation = new StringBuilder();
-                newline(indentation, indent + INDENT);
-                newline(builder.append(indentation).append(string.replace("\n", indentation.toString())), indent);
-            }
-            builder.append('}');
         }
 
         if (builder.charAt(builder.length() - 1) != '{')
