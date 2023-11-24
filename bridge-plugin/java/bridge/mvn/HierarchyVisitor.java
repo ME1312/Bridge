@@ -5,16 +5,12 @@ import bridge.asm.TypeMap;
 
 import org.objectweb.asm.*;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.LinkedList;
 
 final class HierarchyVisitor extends HierarchyScanner {
     private static final String[] EMPTY = new String[0];
-    private final ArrayList<String> synthetic = new ArrayList<>();
-    private boolean adopting;
-    private String signature;
+    private AdjustmentData adjust;
 
     HierarchyVisitor(TypeMap types) {
         super(types);
@@ -24,6 +20,7 @@ final class HierarchyVisitor extends HierarchyScanner {
     public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
         if (!visible) {
             if (desc.equals("Lbridge/Adopt;")) {
+                if (adjust == null) adjust = new AdjustmentData();
                 return new AnnotationVisitor(Opcodes.ASM9) {
                     LinkedList<String> implemented;
                     String extended;
@@ -69,12 +66,13 @@ final class HierarchyVisitor extends HierarchyScanner {
                         } else if (clean) {
                             HierarchyVisitor.super.extended = "java/lang/Object";
                         }
-                        HierarchyVisitor.this.signature = signature;
-                        HierarchyVisitor.this.adopting = true;
+                        adjust.signature = signature;
+                        adjust.adopting = true;
                     }
                 };
             } else if (desc.equals("Lbridge/Synthetic;")) {
-                synthetic.add("");
+                if (adjust == null) adjust = new AdjustmentData();
+                adjust.synthetic.add("");
                 return null;
             }
         }
@@ -87,7 +85,8 @@ final class HierarchyVisitor extends HierarchyScanner {
             @Override
             public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
                 if (desc.equals("Lbridge/Synthetic;")) {
-                    synthetic.add(name);
+                    if (adjust == null) adjust = new AdjustmentData();
+                    adjust.synthetic.add(name);
                     return null;
                 }
                 return super.visitAnnotation(desc, visible);
@@ -101,7 +100,8 @@ final class HierarchyVisitor extends HierarchyScanner {
             @Override
             public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
                 if (desc.equals("Lbridge/Synthetic;")) {
-                    synthetic.add(name + descriptor);
+                    if (adjust == null) adjust = new AdjustmentData();
+                    adjust.synthetic.add(name + descriptor);
                     return null;
                 }
                 return super.visitAnnotation(desc, visible);
@@ -111,11 +111,7 @@ final class HierarchyVisitor extends HierarchyScanner {
 
     @Override
     public void visitEnd() {
-        AdjustedType type;
-        types.add(type = new AdjustedType(super.type));
+        super.data = adjust;
         super.visitEnd();
-        type.synthetic = Collections.unmodifiableCollection(synthetic);
-        type.adopting = adopting;
-        type.signature = signature;
     }
 }

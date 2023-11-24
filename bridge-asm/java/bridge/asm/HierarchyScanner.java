@@ -12,6 +12,7 @@ public class HierarchyScanner extends ClassVisitor {
     protected Type type;
     protected String extended;
     protected String[] implemented;
+    protected Object data;
 
     public HierarchyScanner(TypeMap types) {
         super(Opcodes.ASM9);
@@ -31,6 +32,7 @@ public class HierarchyScanner extends ClassVisitor {
         KnownType type = types.map.computeIfAbsent(this.type, KnownType::new);
         type.isInterface = (access & ACC_INTERFACE) != 0;
         type.extended = (extended == null)? types.get(Object.class) : types.load(Type.getObjectType(extended));
+        type.data = data;
 
         if (implemented != null && implemented.length != 0) {
             KnownType[] types = new KnownType[implemented.length];

@@ -5,14 +5,15 @@ import org.objectweb.asm.Type;
 import java.util.*;
 
 public class KnownType {
-    protected static final KnownType[] EMPTY = new KnownType[0];
+    static final KnownType[] EMPTY = new KnownType[0];
     private Object search;
     public final Type type;
-    protected KnownType extended;
-    protected KnownType[] implemented;
-    protected boolean isInterface;
+    KnownType extended;
+    KnownType[] implemented;
+    boolean isInterface;
+    Object data;
 
-    protected KnownType(Type anonymous) {
+    KnownType(Type anonymous) {
         this.type = Objects.requireNonNull(anonymous);
     }
 
@@ -56,6 +57,10 @@ public class KnownType {
         } else {
             return false;
         }
+    }
+
+    public Object data() {
+        return data;
     }
 
     public KnownType supertype() {
@@ -134,8 +139,22 @@ public class KnownType {
             newline(builder, indent -= INDENT).append('}');
         }
 
-        if (this instanceof ArrayType) {
+        if (isArray()) {
             ((ArrayType) this).element.toString(newline(builder, indent).append("return "), indent);
+        }
+
+        Object data = this.data;
+        if (data != null) {
+            String string = data.toString();
+            Class<?> type = data.getClass();
+            String hash = Integer.toHexString(data.hashCode());
+            newline(builder, indent).append("continue ").append(type.getTypeName()).append(" 0x").append(hash.toUpperCase(Locale.ROOT)).append(" {");
+            if (string != null && !string.equals(type.getName() + '@' + hash)) {
+                StringBuilder indentation = new StringBuilder();
+                newline(indentation, indent + INDENT);
+                newline(builder.append(indentation).append(string.replace("\n", indentation.toString())), indent);
+            }
+            builder.append('}');
         }
 
         if (builder.charAt(builder.length() - 1) != '{')
