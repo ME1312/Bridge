@@ -10,6 +10,7 @@ public class HierarchyScanner extends ClassVisitor {
     protected final TypeMap types;
     protected int access;
     protected Type type;
+    private KnownType compiled;
     protected String extended;
     protected String[] implemented;
     protected Object data;
@@ -29,19 +30,29 @@ public class HierarchyScanner extends ClassVisitor {
 
     @Override
     public void visitEnd() {
-        KnownType type = types.map.computeIfAbsent(this.type, KnownType::new);
-        type.isInterface = (access & ACC_INTERFACE) != 0;
-        type.extended = (extended == null)? types.get(Object.class) : types.load(Type.getObjectType(extended));
-        type.data = data;
+        super.visitEnd();
+        compile().data = data;
+    }
 
-        if (implemented != null && implemented.length != 0) {
-            KnownType[] types = new KnownType[implemented.length];
-            for (int i = 0; i < implemented.length; ++i) {
-                types[i] = this.types.load(Type.getObjectType(implemented[i]));
+    protected final KnownType compile() {
+        KnownType type;
+        if ((type = compiled) == null) {
+            if (this.type == null) throw new IllegalStateException("Called to compile() before visit()");
+            type = compiled = types.map.computeIfAbsent(this.type, KnownType::new);
+            type.isInterface = (access & ACC_INTERFACE) != 0;
+            type.extended = (extended == null)? types.get(Object.class) : types.load(Type.getObjectType(extended));
+            type.data = data;
+
+            if (implemented != null && implemented.length != 0) {
+                KnownType[] types = new KnownType[implemented.length];
+                for (int i = 0; i < implemented.length; ++i) {
+                    types[i] = this.types.load(Type.getObjectType(implemented[i]));
+                }
+                type.implemented = types;
+            } else {
+                type.implemented = KnownType.EMPTY;
             }
-            type.implemented = types;
-        } else {
-            type.implemented = KnownType.EMPTY;
         }
+        return type;
     }
 }

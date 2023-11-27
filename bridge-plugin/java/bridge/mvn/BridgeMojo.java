@@ -126,9 +126,8 @@ public final class BridgeMojo extends AbstractMojo {
                 }
             }
 
-            Iterator<Artifact> artifacts = new LinkedList<>(project.getArtifacts()).descendingIterator();
-            for (Artifact artifact; artifacts.hasNext();) {
-                File file = (artifact = artifacts.next()).getFile();
+            for (Artifact artifact : project.getArtifacts()) {
+                File file = artifact.getFile();
                 if (file.getName().endsWith(".jar") && file.exists()) {
                     log.info("  + " + file + " (" + artifact.getScope() + ')');
                     try (ZipInputStream zis = new ZipInputStream(new FileInputStream(file))) {
