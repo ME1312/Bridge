@@ -11,12 +11,12 @@ public final class Unchecked extends RuntimeException {
      *
      * @param e Exception
      */
-    public Unchecked(Throwable e) {}
+    public Unchecked(Throwable e) { Invocation.$(); }
 
     /**
      * Brings an (unchecked) exception into scope
      *
      * @param <E> Exception type
      */
-    public static <E extends Throwable> void check() throws E {}
+    public static <E extends Throwable> void check() throws E { Invocation.$(); }
 }

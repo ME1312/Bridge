@@ -12,12 +12,12 @@ public final class Label {
      *
      * @param id Label ID constant &ndash; no dynamic values or mathematics is permitted here.
      */
-    public Label(int id) {}
+    public Label(int id) { Invocation.$(); }
 
     /**
      * Creates a persistent label at this location
      *
      * @param name Label name constant &ndash; no dynamic values or string manipulation is permitted here.
      */
-    public Label(String name) {}
+    public Label(String name) { Invocation.$(name); }
 }

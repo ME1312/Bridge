@@ -11,12 +11,12 @@ public final class Jump extends RuntimeException {
      *
      * @param id Label ID constant &ndash; no dynamic values or mathematics is permitted here.
      */
-    public Jump(int id) {}
+    public Jump(int id) { Invocation.$(); }
 
     /**
      * Teleports to a persistent label in this method
      *
      * @param name Label name constant &ndash; no dynamic values or string manipulation is permitted here.
      */
-    public Jump(String name) {}
+    public Jump(String name) { Invocation.$(name); }
 }

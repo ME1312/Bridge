@@ -7,7 +7,7 @@ package bridge;
 @SuppressWarnings("InnerClassMayBeStatic")
 public final class Invocation {
 
-    private static native <T> T $();
+    static native <T> T $(Object... arguments);
 
     /**
      * Creates fork(s) of your class with code tailored to the specified Java language level(s)
@@ -21,14 +21,14 @@ public final class Invocation {
      *
      * @param type Type constant &ndash; no dynamic values are permitted here.
      */
-    public Invocation(Class<?> type) {}
+    public Invocation(Class<?> type) { $(type); }
 
     /**
      * Starts a direct reference to something static
      *
      * @param type Type name constant &ndash; no dynamic values or string manipulation is permitted here.
      */
-    public Invocation(String type) {}
+    public Invocation(String type) { $(type); }
 
     /**
      * Starts a direct reference to something that belongs to an instance of an object
@@ -36,7 +36,7 @@ public final class Invocation {
      * @implNote Calling this overload will cause the object type to be determined automatically.
      * @param instance Object instance
      */
-    public Invocation(@Polymorphic Object instance) {}
+    public Invocation(@Polymorphic Object instance) { $(instance); }
 
     /**
      * Starts a direct reference to something that belongs to an instance of an object
@@ -44,7 +44,7 @@ public final class Invocation {
      * @param type Type constant &ndash; no dynamic values are permitted here.
      * @param instance Object instance
      */
-    public Invocation(Class<?> type, Object instance) {}
+    public Invocation(Class<?> type, Object instance) { $(type, instance); }
 
     /**
      * Starts a direct reference to something that belongs to an instance of an object
@@ -52,7 +52,7 @@ public final class Invocation {
      * @param type Type name constant &ndash; no dynamic values or string manipulation is permitted here.
      * @param instance Object instance
      */
-    public Invocation(String type, Object instance) {}
+    public Invocation(String type, Object instance) { $(type, instance); }
 
     /**
      * Creates a direct reference to a class
@@ -84,7 +84,7 @@ public final class Invocation {
      * @param name Method name constant &ndash; no dynamic values or string manipulation is permitted here.
      * @return An imaginary reference for you to execute your request with.
      */
-    public Executor ofMethod(String name) { return $(); }
+    public Executor ofMethod(String name) { return $(name); }
 
     /**
      * Creates a direct reference to a method
@@ -93,7 +93,7 @@ public final class Invocation {
      * @param name Method name constant &ndash; no dynamic values or string manipulation is permitted here.
      * @return An imaginary reference for you to execute your request with.
      */
-    public Executor ofMethod(Class<?> type, String name) { return $(); }
+    public Executor ofMethod(Class<?> type, String name) { return $(type, name); }
 
     /**
      * Creates a direct reference to a method
@@ -102,7 +102,7 @@ public final class Invocation {
      * @param name Method name constant &ndash; no dynamic values or string manipulation is permitted here.
      * @return An imaginary reference for you to execute your request with.
      */
-    public Executor ofMethod(String type, String name) { return $(); }
+    public Executor ofMethod(String type, String name) { return $(type, name); }
 
     /**
      * A class that is used to execute method invocations
@@ -117,7 +117,7 @@ public final class Invocation {
          * @param argument Argument value
          * @return An imaginary reference for you to continue executing your request with.
          */
-        public Executor with(@Polymorphic Object argument) { return $(); }
+        public Executor with(@Polymorphic Object argument) { return $(argument); }
         /**@hidden */public Executor with(double argument) { return $(); }
         /**@hidden */public Executor with(long argument) { return $(); }
         /**@hidden */public Executor with(float argument) { return $(); }
@@ -134,7 +134,7 @@ public final class Invocation {
          * @param argument Argument value
          * @return An imaginary reference for you to continue executing your request with.
          */
-        public Executor with(Class<?> parameter, Object argument) { return $(); }
+        public Executor with(Class<?> parameter, Object argument) { return $(parameter, argument); }
 
         /**
          * Adds an argument to the stack
@@ -143,7 +143,7 @@ public final class Invocation {
          * @param argument Argument value
          * @return An imaginary reference for you to continue executing your request with.
          */
-        public Executor with(String parameter, Object argument) { return $(); }
+        public Executor with(String parameter, Object argument) { return $(parameter, argument); }
 
         /**
          * Brings an exception into scope
@@ -159,7 +159,7 @@ public final class Invocation {
          * @param exception Exception type constant &ndash; no dynamic values are permitted here.
          * @return An imaginary reference for you to continue executing your request with.
          */
-        public <E extends Throwable> Executor check(Class<E> exception) throws E { return $(); };
+        public <E extends Throwable> Executor check(Class<E> exception) throws E { return $(exception); };
 
         /**
          * Executes the method
@@ -176,7 +176,7 @@ public final class Invocation {
      * @param name Field name constant &ndash; no dynamic values or string manipulation is permitted here.
      * @return An imaginary reference for you to execute your request with.
      */
-    public Accessor ofField(String name) { return $(); }
+    public Accessor ofField(String name) { return $(name); }
 
     /**
      * Creates a direct reference to a field
@@ -185,7 +185,7 @@ public final class Invocation {
      * @param name Field name constant &ndash; no dynamic values or string manipulation is permitted here.
      * @return An imaginary reference for you to execute your request with.
      */
-    public Accessor ofField(Class<?> type, String name) { return $(); }
+    public Accessor ofField(Class<?> type, String name) { return $(type, name); }
 
     /**
      * Creates a direct reference to a field
@@ -194,7 +194,7 @@ public final class Invocation {
      * @param name Field name constant &ndash; no dynamic values or string manipulation is permitted here.
      * @return An imaginary reference for you to execute your request with.
      */
-    public Accessor ofField(String type, String name) { return $(); }
+    public Accessor ofField(String type, String name) { return $(type, name); }
 
     /**
      * A class that is used to execute field invocations
@@ -216,7 +216,7 @@ public final class Invocation {
          * @param value The new value the field will hold
          * @return The previous value the field held
          */
-        public <@Polymorphic T> T getAndSet(Object value) { return $(); }
+        public <@Polymorphic T> T getAndSet(Object value) { return $(value); }
         /**@hidden */public <@Polymorphic T> T getAndSet(double value) { return $(); }
         /**@hidden */public <@Polymorphic T> T getAndSet(long value) { return $(); }
         /**@hidden */public <@Polymorphic T> T getAndSet(float value) { return $(); }
@@ -233,7 +233,7 @@ public final class Invocation {
          * @param value The new value the field will hold
          * @return That same value (without any conversions)
          */
-        public <T> T set(@Polymorphic T value) { return $(); }
+        public <T> T set(@Polymorphic T value) { return $(value); }
         /**@hidden */public double set(double value) { return $(); }
         /**@hidden */public long set(long value) { return $(); }
         /**@hidden */public float set(float value) { return $(); }
@@ -250,7 +250,7 @@ public final class Invocation {
          * @param value The new value the field will hold
          * @return That same value (with all required conversions applied)
          */
-        public <@Polymorphic T> T setAndGet(Object value) { return $(); }
+        public <@Polymorphic T> T setAndGet(Object value) { return $(value); }
         /**@hidden */public <@Polymorphic T> T setAndGet(double value) { return $(); }
         /**@hidden */public <@Polymorphic T> T setAndGet(long value) { return $(); }
         /**@hidden */public <@Polymorphic T> T setAndGet(float value) { return $(); }
