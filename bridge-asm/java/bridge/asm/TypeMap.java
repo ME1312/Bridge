@@ -125,11 +125,11 @@ public final class TypeMap implements Cloneable {
         return value;
     }
 
-    public KnownType loadObject(String type) {
+    public KnownType loadClass(String type) {
         return load(Type.getObjectType(type));
     }
 
-    public KnownType[] loadObject(String[] types) {
+    public KnownType[] loadClass(String[] types) {
         KnownType[] value = new KnownType[types.length];
         for (int i = 0; i < value.length; ++i) {
             value[i] = load(Type.getObjectType(types[i]));

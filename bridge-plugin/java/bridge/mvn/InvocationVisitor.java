@@ -296,7 +296,7 @@ final class InvocationVisitor extends AnalyzerAdapter {
                         zero = stack.size() + 1;
                         return;
                     } else if (state == 0x06 && opcode == CHECKCAST) {
-                        casted = types.loadObject(type);
+                        casted = types.loadClass(type);
                         return;
                     }
                     super.visitTypeInsn(opcode, type);
@@ -387,7 +387,7 @@ final class InvocationVisitor extends AnalyzerAdapter {
                     } else {
                         final String str;
                         if ((str = ldc.toString().replace('.', '/')).length() != 0) {
-                            return types.loadObject(str);
+                            return types.loadClass(str);
                         } else {
                             throw exception("Illegal empty invocation constant");
                         }

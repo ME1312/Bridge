@@ -32,7 +32,7 @@ final class BridgeVisitor extends ClassVisitor {
 
     @Override
     public void visit(int version, int access, String name, String signature, String extended, String[] implemented) {
-        KnownType type = this.type = types.loadObject(this.name = name);
+        KnownType type = this.type = types.loadClass(this.name = name);
         AdjustmentData adjust = this.adjust = (AdjustmentData) type.data();
         if (adjust != null) {
             if (adjust.adopting) {

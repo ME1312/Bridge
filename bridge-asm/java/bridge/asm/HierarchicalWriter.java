@@ -15,8 +15,8 @@ public class HierarchicalWriter extends ClassWriter {
         if (type1.equals(type2)) {
             return type1;
         }
-        KnownType a = types.loadObject(type1);
-        KnownType b = types.loadObject(type2);
+        KnownType a = types.loadClass(type1);
+        KnownType b = types.loadClass(type2);
 
         if (b.implemented(a)) {
             return type1;
