@@ -4,8 +4,9 @@ import bridge.asm.ArrayType;
 import bridge.asm.KnownType;
 import bridge.asm.QueuedVisitor;
 import bridge.asm.TypeMap;
-
-import org.objectweb.asm.*;
+import org.objectweb.asm.Label;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.AnalyzerAdapter;
 
 import java.util.*;
@@ -295,7 +296,7 @@ final class InvocationVisitor extends AnalyzerAdapter {
                         zero = stack.size() + 1;
                         return;
                     } else if (state == 0x06 && opcode == CHECKCAST) {
-                        casted = types.load(Type.getObjectType(type));
+                        casted = types.loadObject(type);
                         return;
                     }
                     super.visitTypeInsn(opcode, type);
@@ -386,7 +387,7 @@ final class InvocationVisitor extends AnalyzerAdapter {
                     } else {
                         final String str;
                         if ((str = ldc.toString().replace('.', '/')).length() != 0) {
-                            return types.load(Type.getObjectType(str));
+                            return types.loadObject(str);
                         } else {
                             throw exception("Illegal empty invocation constant");
                         }

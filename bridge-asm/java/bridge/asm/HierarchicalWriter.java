@@ -1,7 +1,6 @@
 package bridge.asm;
 
 import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.Type;
 
 public class HierarchicalWriter extends ClassWriter {
     private final TypeMap types;
@@ -16,8 +15,8 @@ public class HierarchicalWriter extends ClassWriter {
         if (type1.equals(type2)) {
             return type1;
         }
-        KnownType a = types.load(Type.getObjectType(type1));
-        KnownType b = types.load(Type.getObjectType(type2));
+        KnownType a = types.loadObject(type1);
+        KnownType b = types.loadObject(type2);
 
         if (b.implemented(a)) {
             return type1;
@@ -31,5 +30,10 @@ public class HierarchicalWriter extends ClassWriter {
         } else {
             return "java/lang/Object";
         }
+    }
+
+    @Override
+    protected ClassLoader getClassLoader() {
+        return types.loader;
     }
 }

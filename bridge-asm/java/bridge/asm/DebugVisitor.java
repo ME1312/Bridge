@@ -1,6 +1,8 @@
 package bridge.asm;
 
-import org.objectweb.asm.*;
+import org.objectweb.asm.Handle;
+import org.objectweb.asm.Label;
+import org.objectweb.asm.MethodVisitor;
 
 import java.io.PrintStream;
 import java.util.LinkedList;

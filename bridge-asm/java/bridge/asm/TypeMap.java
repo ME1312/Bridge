@@ -1,19 +1,19 @@
 package bridge.asm;
 
+import org.objectweb.asm.Type;
+
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 
-import org.objectweb.asm.Type;
-
 public final class TypeMap implements Cloneable {
     public static final ClassLoader PLATFORM;
     public static final byte STORE_ARRAYS = 0b1;
+    final ClassLoader loader;
     final HashMap<Type, KnownType> map = new HashMap<>();
     private final Collection<KnownType> values = Collections.unmodifiableCollection(map.values());
-    private final ClassLoader loader;
     private final boolean store_arrays;
 
     static {
@@ -56,6 +56,7 @@ public final class TypeMap implements Cloneable {
         }
         return value;
     }
+
     public KnownType get(Class<?> loaded) {
         Type type = Type.getType(loaded);
         if (loaded.isArray()) {
@@ -96,8 +97,9 @@ public final class TypeMap implements Cloneable {
             return new KnownType(this, type, Types.load(loader, type));
         } catch (ClassNotFoundException e) {
             map.put(type, value = new KnownType(type));
-            if (type.getSort() == Type.OBJECT)
+            if (type.getSort() == Type.OBJECT) {
                 value.extended = get(Object.class);
+            }
             value.implemented = KnownType.EMPTY;
             return value;
         }
@@ -107,6 +109,30 @@ public final class TypeMap implements Cloneable {
         KnownType[] value = new KnownType[types.length];
         for (int i = 0; i < value.length; ++i) {
             value[i] = load(types[i]);
+        }
+        return value;
+    }
+
+    public KnownType load(String type) {
+        return load(Type.getType(type));
+    }
+
+    public KnownType[] load(String[] types) {
+        KnownType[] value = new KnownType[types.length];
+        for (int i = 0; i < value.length; ++i) {
+            value[i] = load(Type.getType(types[i]));
+        }
+        return value;
+    }
+
+    public KnownType loadObject(String type) {
+        return load(Type.getObjectType(type));
+    }
+
+    public KnownType[] loadObject(String[] types) {
+        KnownType[] value = new KnownType[types.length];
+        for (int i = 0; i < value.length; ++i) {
+            value[i] = load(Type.getObjectType(types[i]));
         }
         return value;
     }

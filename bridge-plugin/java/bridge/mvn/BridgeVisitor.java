@@ -2,7 +2,6 @@ package bridge.mvn;
 
 import bridge.asm.KnownType;
 import bridge.asm.TypeMap;
-
 import org.objectweb.asm.*;
 
 import java.util.ArrayList;
@@ -33,7 +32,7 @@ final class BridgeVisitor extends ClassVisitor {
 
     @Override
     public void visit(int version, int access, String name, String signature, String extended, String[] implemented) {
-        KnownType type = this.type = types.load(Type.getObjectType(this.name = name));
+        KnownType type = this.type = types.loadObject(this.name = name);
         AdjustmentData adjust = this.adjust = (AdjustmentData) type.data();
         if (adjust != null) {
             if (adjust.adopting) {
@@ -76,7 +75,7 @@ final class BridgeVisitor extends ClassVisitor {
             this.access = access;
             this.name = name;
             this.desc = descriptor;
-            this.returns = types.load(Type.getType(descriptor));
+            this.returns = types.load(descriptor);
         }
     }
 

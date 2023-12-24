@@ -1,8 +1,10 @@
 package bridge.asm;
 
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
-import java.util.*;
+import java.util.Locale;
+import java.util.Objects;
 
 public class KnownType {
     static final KnownType[] EMPTY = new KnownType[0];
@@ -10,7 +12,7 @@ public class KnownType {
     public final Type type;
     KnownType extended;
     KnownType[] implemented;
-    boolean isInterface;
+    int access;
     Object data;
 
     KnownType(Type anonymous) {
@@ -19,13 +21,13 @@ public class KnownType {
 
     KnownType(TypeMap types, Type type, Class<?> loaded) {
         this.type = Objects.requireNonNull(type);
-        this.isInterface = loaded.isInterface();
+        this.access = loaded.getModifiers();
         types.map.put(type, this);
 
         final Class<?> extended = loaded.getSuperclass();
         if (extended != null) {
             this.extended = types.get(extended);
-        } else if (loaded != Object.class && type.getSort() == Type.OBJECT) {
+        } else if (loaded != Object.class && !loaded.isPrimitive()) {
             this.extended = types.get(Object.class);
         }
 
@@ -61,6 +63,10 @@ public class KnownType {
 
     public Object data() {
         return data;
+    }
+
+    public int modifiers() {
+        return access;
     }
 
     public KnownType supertype() {
@@ -103,7 +109,7 @@ public class KnownType {
     }
 
     public boolean isInterface() {
-        return isInterface;
+        return (access & Opcodes.ACC_INTERFACE) != 0;
     }
 
     public boolean isArray() {

@@ -3,8 +3,8 @@ package bridge.asm;
 import org.objectweb.asm.Type;
 
 import java.util.Map;
-import java.util.Optional;
 
+import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.getType;
 
 public final class ArrayType extends KnownType {
@@ -30,8 +30,11 @@ public final class ArrayType extends KnownType {
         }
         if ((this.depth = depth) == 0) {
             throw new IllegalArgumentException(desc);
+        } else if (depth == 1) {
+            access = ((element = root).access & (ACC_PUBLIC | ACC_PROTECTED | ACC_PRIVATE)) | ACC_FINAL;
+        } else {
+            access = (element = get(arrays, types, getType(desc.substring(1)))).access;
         }
-        element = (depth == 1)? root : get(arrays, types, getType(desc.substring(1)));
         arrays.put(type, this);
 
         final String depthd_m1 = desc.substring(1, depth);

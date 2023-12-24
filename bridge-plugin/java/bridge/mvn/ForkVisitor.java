@@ -1,9 +1,15 @@
 package bridge.mvn;
 
 import bridge.asm.QueuedVisitor;
-import org.objectweb.asm.*;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.Label;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.ModuleVisitor;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 
 import static org.objectweb.asm.Opcodes.*;
 

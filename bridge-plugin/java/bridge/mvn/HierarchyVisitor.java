@@ -2,7 +2,6 @@ package bridge.mvn;
 
 import bridge.asm.HierarchyScanner;
 import bridge.asm.TypeMap;
-
 import org.objectweb.asm.*;
 
 import java.util.Arrays;
