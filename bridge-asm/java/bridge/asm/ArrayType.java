@@ -31,7 +31,7 @@ public final class ArrayType extends KnownType {
         if ((this.depth = depth) == 0) {
             throw new IllegalArgumentException(desc);
         } else if (depth == 1) {
-            access = ((element = root).access & (ACC_PUBLIC | ACC_PROTECTED | ACC_PRIVATE)) | ACC_FINAL;
+            access = ((element = root).access & (ACC_PUBLIC | ACC_PROTECTED | ACC_PRIVATE)) | ACC_ABSTRACT | ACC_FINAL;
         } else {
             access = (element = get(arrays, types, getType(desc.substring(1)))).access;
         }
