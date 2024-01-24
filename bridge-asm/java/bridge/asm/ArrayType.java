@@ -46,10 +46,10 @@ public final class ArrayType extends KnownType {
             this.extended = get(arrays, types, getType(depthd_m1 + "Ljava/lang/Object;"));
         }
 
-        int i = 0;
-        final KnownType[] interfaces = root.implemented;
-        final KnownType[] implemented = this.implemented = new KnownType[interfaces.length + 2];
-        for (int length = interfaces.length; i != length;) {
+        int i = 0, length;
+        final KnownType[] interfaces;
+        final KnownType[] implemented = this.implemented = new KnownType[(length = (interfaces = root.implemented).length) + 2];
+        while (i != length) {
             implemented[i] = get(arrays, types, getType(depthd + interfaces[i++].type.getDescriptor()));
         }
         implemented[i]   = get(arrays, types, getType(depthd_m1 + "Ljava/lang/Cloneable;"));
