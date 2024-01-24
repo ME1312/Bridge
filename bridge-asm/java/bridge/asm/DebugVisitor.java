@@ -137,10 +137,10 @@ public final class DebugVisitor extends MethodVisitor {
     public void visitLookupSwitchInsn(Label dflt, int[] keys, Label[] labels) {
         visitOperation(LOOKUPSWITCH);
         out.print("  {");
-        for (int i = 0, length = Math.min(keys.length, labels.length); i != length; ++i) {
+        for (int i = 0, length = Math.min(keys.length, labels.length); i != length;) {
             out.print(keys[i]);
             out.print(": #");
-            out.print(hex(labels[i]));
+            out.print(hex(labels[i++]));
             out.print(", ");
         }
         out.print("default: #");
@@ -206,10 +206,10 @@ public final class DebugVisitor extends MethodVisitor {
         out.print(", ");
         out.print(max);
         out.print("] {");
-        for (int i = 0, length = labels.length; i != length; ++i) {
+        for (int i = 0, length = labels.length; i != length;) {
             out.print(min + i);
             out.print(": #");
-            out.print(hex(labels[i]));
+            out.print(hex(labels[i++]));
             out.print(", ");
         }
         out.print("default: #");

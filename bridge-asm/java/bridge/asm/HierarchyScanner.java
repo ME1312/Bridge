@@ -52,9 +52,9 @@ public class HierarchyScanner extends ClassVisitor {
     protected final KnownType compile() {
         KnownType type;
         if ((type = compiled) == null) {
-            if (this.name == null) throw new IllegalStateException("Called to compile() before visit()");
-            type = compiled = types.map.computeIfAbsent(Type.getObjectType(name), KnownType::new);
-            type.extended = (extended == null)? types.get(Object.class) : types.loadClass(extended);
+            if (name == null) throw new IllegalStateException("Called to compile() before visit()");
+            (compiled = type = types.map.computeIfAbsent(Type.getObjectType(name), KnownType::new))
+                   .extended = (extended == null)? types.get(Object.class) : types.loadClass(extended);
             type.implemented = types.loadClass(implemented);
             type.access = access;
             type.data = data;

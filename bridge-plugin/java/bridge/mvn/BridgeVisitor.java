@@ -39,7 +39,7 @@ final class BridgeVisitor extends ClassVisitor {
                 KnownType[] interfaces = type.interfaces();
                 extended = adopt = type.supertype().type.getInternalName();
                 if (implemented.length != interfaces.length) implemented = new String[interfaces.length];
-                for (int i = 0; i < interfaces.length; ++i) implemented[i] = interfaces[i].type.getInternalName();
+                for (int i = 0, length = interfaces.length; i != length;) implemented[i] = interfaces[i++].type.getInternalName();
                 signature = adjust.signature;
             }
             if (adjust.synthetic.contains("")) {

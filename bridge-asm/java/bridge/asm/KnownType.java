@@ -20,9 +20,8 @@ public class KnownType {
     }
 
     KnownType(TypeMap types, Type type, Class<?> loaded) {
-        this.type = Objects.requireNonNull(type);
-        this.access = loaded.getModifiers();
-        types.map.put(type, this);
+        types.map.put(this.type = Objects.requireNonNull(type), this);
+        access = loaded.getModifiers();
 
         final Class<?> extended = loaded.getSuperclass();
         if (extended != null) {
@@ -33,11 +32,10 @@ public class KnownType {
 
         final Class<?>[] interfaces = loaded.getInterfaces();
         if (interfaces.length != 0) {
-            final KnownType[] implemented = new KnownType[interfaces.length];
-            for (int i = 0; i < interfaces.length; ++i) {
-                implemented[i] = types.get(interfaces[i]);
+            final KnownType[] implemented = this.implemented = new KnownType[interfaces.length];
+            for (int i = 0, length = interfaces.length; i != length;) {
+                implemented[i] = types.get(interfaces[i++]);
             }
-            this.implemented = implemented;
         } else {
             this.implemented = EMPTY;
         }
@@ -139,8 +137,8 @@ public class KnownType {
         if (implemented.length != 0) {
             newline(builder, indent).append("implements {");
             implemented[0].toString(newline(builder, indent += INDENT), indent);
-            for (int i = 1; i < implemented.length; ++i) {
-                implemented[i].toString(newline(builder.append(','), indent), indent);
+            for (int i = 1, length = implemented.length; i != length;) {
+                implemented[i++].toString(newline(builder.append(','), indent), indent);
             }
             newline(builder, indent -= INDENT).append('}');
         }

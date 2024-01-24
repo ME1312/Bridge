@@ -55,8 +55,8 @@ public final class TypeMap implements Cloneable {
             return KnownType.EMPTY;
         }
         final KnownType[] value = new KnownType[length];
-        for (int i = 0; i < length; ++i) {
-            value[i] = add(types[i]);
+        for (int i = 0; i != length;) {
+            value[i] = add(types[i++]);
         }
         return value;
     }
@@ -83,8 +83,8 @@ public final class TypeMap implements Cloneable {
             return KnownType.EMPTY;
         }
         final KnownType[] value = new KnownType[length];
-        for (int i = 0; i < length; ++i) {
-            value[i] = get(loaded[i]);
+        for (int i = 0; i != length;) {
+            value[i] = get(loaded[i++]);
         }
         return value;
     }
@@ -119,8 +119,8 @@ public final class TypeMap implements Cloneable {
             return KnownType.EMPTY;
         }
         final KnownType[] value = new KnownType[length];
-        for (int i = 0; i < length; ++i) {
-            value[i] = load(types[i]);
+        for (int i = 0; i != length;) {
+            value[i] = load(types[i++]);
         }
         return value;
     }
@@ -135,8 +135,8 @@ public final class TypeMap implements Cloneable {
             return KnownType.EMPTY;
         }
         final KnownType[] value = new KnownType[length];
-        for (int i = 0; i < length; ++i) {
-            value[i] = load(Type.getType(types[i]));
+        for (int i = 0; i != length;) {
+            value[i] = load(Type.getType(types[i++]));
         }
         return value;
     }
@@ -151,8 +151,8 @@ public final class TypeMap implements Cloneable {
             return KnownType.EMPTY;
         }
         final KnownType[] value = new KnownType[length];
-        for (int i = 0; i < length; ++i) {
-            value[i] = load(Type.getObjectType(names[i]));
+        for (int i = 0; i != length;) {
+            value[i] = load(Type.getObjectType(names[i++]));
         }
         return value;
     }

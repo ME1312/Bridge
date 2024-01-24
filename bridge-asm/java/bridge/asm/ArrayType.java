@@ -48,13 +48,12 @@ public final class ArrayType extends KnownType {
 
         int i = 0;
         final KnownType[] interfaces = root.implemented;
-        final KnownType[] implemented = new KnownType[interfaces.length + 2];
-        while (i < interfaces.length) {
+        final KnownType[] implemented = this.implemented = new KnownType[interfaces.length + 2];
+        for (int length = interfaces.length; i != length;) {
             implemented[i] = get(arrays, types, getType(depthd + interfaces[i++].type.getDescriptor()));
         }
         implemented[i]   = get(arrays, types, getType(depthd_m1 + "Ljava/lang/Cloneable;"));
         implemented[i+1] = get(arrays, types, getType(depthd_m1 + "Ljava/io/Serializable;"));
-        this.implemented = implemented;
     }
 
     private static KnownType get(Map<Type, KnownType> arrays, TypeMap types, Type type) {
