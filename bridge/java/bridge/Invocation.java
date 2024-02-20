@@ -57,7 +57,7 @@ public final class Invocation {
     /**
      * Creates a direct reference to a class
      *
-     * @return An actual class reference.
+     * @return The real class reference.
      */
     public Class<?> ofClassLiteral() { return $(); }
 
@@ -65,7 +65,7 @@ public final class Invocation {
      * Creates a direct type-compatibility check
      *
      * @implNote This operation requires instance access.
-     * @return The actual boolean response.
+     * @return The real boolean response.
      */
     public boolean ofInstanceOf() { return $(); }
 
@@ -164,7 +164,7 @@ public final class Invocation {
         /**
          * Executes the method
          *
-         * @return The actual return value of the method
+         * @return The real return value of the method.
          */
         public <@Polymorphic T> T invoke() { return $(); }
     }
@@ -205,7 +205,7 @@ public final class Invocation {
         /**
          * Gets the field value
          *
-         * @return The current value the field holds
+         * @return The current, real value the field holds.
          */
         public <@Polymorphic T> T get() { return $(); }
 
@@ -213,8 +213,8 @@ public final class Invocation {
         /**
          * Gets, then sets, the field value
          *
-         * @param value The new value the field will hold
-         * @return The previous value the field held
+         * @param value The new value the field will hold.
+         * @return The previous, real value the field held.
          */
         public <@Polymorphic T> T getAndSet(Object value) { return $(value); }
         /**@hidden */public <@Polymorphic T> T getAndSet(double value) { return $(); }
@@ -230,8 +230,8 @@ public final class Invocation {
         /**
          * Sets the field value
          *
-         * @param value The new value the field will hold
-         * @return That same value (without any conversions)
+         * @param value The new value the field will hold.
+         * @return That same, real value, without any conversions.
          */
         public <T> T set(@Polymorphic T value) { return $(value); }
         /**@hidden */public double set(double value) { return $(); }
@@ -247,8 +247,8 @@ public final class Invocation {
         /**
          * Sets, then gets, the field value
          *
-         * @param value The new value the field will hold
-         * @return That same value (with all required conversions applied)
+         * @param value The new value the field will hold.
+         * @return That same, real value, with all required conversions applied.
          */
         public <@Polymorphic T> T setAndGet(Object value) { return $(value); }
         /**@hidden */public <@Polymorphic T> T setAndGet(double value) { return $(); }

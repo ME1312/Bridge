@@ -13,7 +13,7 @@ import static bridge.asm.Types.*;
 import static org.objectweb.asm.Opcodes.*;
 
 final class BridgeVisitor extends ClassVisitor {
-    private static final int ACC_VALID = ACC_PUBLIC | ACC_PROTECTED | ACC_PRIVATE | ACC_STATIC | ACC_FINAL | ACC_SYNTHETIC | ACC_TRANSIENT | ACC_VARARGS;
+    private static final int ACC_VALID = ACC_PUBLIC | ACC_PROTECTED | ACC_PRIVATE | ACC_FINAL | ACC_SYNTHETIC | ACC_TRANSIENT | ACC_VARARGS;
     private Map<BridgeAnnotation.Data, Field> staticFields;
     private Map<BridgeAnnotation.Data, Field> fields;
     private boolean isInterface, clinit, init;
@@ -35,16 +35,15 @@ final class BridgeVisitor extends ClassVisitor {
         KnownType type = this.type = types.loadClass(this.name = name);
         AdjustmentData adjust = this.adjust = (AdjustmentData) type.data();
         if (adjust != null) {
-            if (adjust.adopting) {
-                KnownType[] interfaces = type.interfaces();
+            if (adjust.adopted) {
+                final KnownType[] interfaces;
+                int i = 0, length = (interfaces = type.interfaces()).length;
+                if (implemented == null || implemented.length != length) implemented = new String[length];
+                while (i != length) implemented[i] = interfaces[i++].type.getInternalName();
                 extended = adopt = type.supertype().type.getInternalName();
-                if (implemented.length != interfaces.length) implemented = new String[interfaces.length];
-                for (int i = 0, length = interfaces.length; i != length;) implemented[i] = interfaces[i++].type.getInternalName();
                 signature = adjust.signature;
             }
-            if (adjust.synthetic.contains("")) {
-                access |= ACC_SYNTHETIC;
-            }
+            access = type.modifiers();
         }
         this.isInterface = (access & ACC_INTERFACE) != 0;
         this.forks.put(this.version = version - 44, Boolean.FALSE);
@@ -65,10 +64,12 @@ final class BridgeVisitor extends ClassVisitor {
         super.visitSource(this.src = source, debug);
     }
 
-    private abstract class Field extends FieldVisitor {
-        final KnownType returns;
-        final String name, desc;
+    private final class Field extends FieldVisitor {
+        private ArrayList<BridgeAnnotation.Data> bridges;
         final int access;
+        final String name, desc;
+        final KnownType returns;
+        final Object value;
 
         private Field(int access, String name, String descriptor, String signature, Object value) {
             super(ASM9, BridgeVisitor.super.visitField(access, name, descriptor, signature, value));
@@ -76,64 +77,63 @@ final class BridgeVisitor extends ClassVisitor {
             this.name = name;
             this.desc = descriptor;
             this.returns = types.load(descriptor);
+            this.value = value;
+        }
+
+        @Override
+        public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
+            if (!visible) {
+                if (desc.equals("Lbridge/Bridges;") || desc.equals("Lbridge/Bridge;")) {
+                    if (bridges == null) bridges = new ArrayList<>();
+                    return new BridgeAnnotation(ACC_TRANSIENT | ACC_SYNTHETIC | access, name, this.desc, returns.type, bridges::add);
+                } else if (desc.equals("Lbridge/Synthetic;")) {
+                    ++adjustments;
+                    return null;
+                }
+            }
+            return super.visitAnnotation(desc, visible);
+        }
+
+        private Map<BridgeAnnotation.Data, Field> initStatic() {
+            if (clinit) throw new IllegalStateException("Attempted @Bridge to static field after <clinit>: " + this.name.replace('/', '.') + '.' + name + '(' + src + ')');
+            if (staticFields == null) staticFields = new HashMap<>();
+            return staticFields;
+        }
+
+        private Map<BridgeAnnotation.Data, Field> initVirtual() {
+            if (init) throw new IllegalStateException("Attempted @Bridge to instance field after <init>: " + this.name.replace('/', '.') + '.' + name + '(' + src + ')');
+            if (fields == null) fields = new HashMap<>();
+            return fields;
+        }
+
+        @Override
+        public void visitEnd() {
+            super.visitEnd();
+            final int ACC_VALID = ((access & ACC_STATIC) == 0)? BridgeVisitor.ACC_VALID : BridgeVisitor.ACC_VALID | ACC_STATIC;
+            if (bridges != null) {
+                boolean safe, constant = (access & ACC_FINAL) != 0;
+                for (BridgeAnnotation.Data data : bridges) {
+                    safe = constant && returns.type.equals(data.returns);
+                    FieldVisitor fv = cv.visitField(data.access &= ACC_VALID, data.name, data.desc, data.sign, (safe)? value : null);
+                    data.annotate(fv::visitAnnotation);
+                    fv.visitEnd();
+                    if (!safe || value == null) {
+                        (((data.access & ACC_STATIC) != 0)? initStatic() : initVirtual()).put(data, this);
+                    }
+                }
+                BridgeVisitor.this.bridges += bridges.size();
+            }
         }
     }
 
     @Override
-    public FieldVisitor visitField(int access, String name, String descriptor, String signature, Object value) {
-        if (adjust != null && adjust.synthetic.contains(name)) access |= ACC_SYNTHETIC;
-        return new Field(access, name, descriptor, signature, value) {
-            private ArrayList<BridgeAnnotation.Data> bridges;
-
-            @Override
-            public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
-                if (!visible) {
-                    if (desc.equals("Lbridge/Bridges;") || desc.equals("Lbridge/Bridge;")) {
-                        if (bridges == null) bridges = new ArrayList<>();
-                        return new BridgeAnnotation(access | ACC_TRANSIENT | ACC_SYNTHETIC, name, descriptor, returns.type, data -> bridges.add(data));
-                    } else if (desc.equals("Lbridge/Synthetic;")) {
-                        ++adjustments;
-                        return null;
-                    }
-                }
-                return super.visitAnnotation(desc, visible);
-            }
-
-            private Map<BridgeAnnotation.Data, Field> initStatic() {
-                if (clinit) throw new IllegalStateException("Cannot @Bridge static fields after <clinit>: " + this.name.replace('/', '.') + '.' + name + '(' + src + ')');
-                if (staticFields == null) staticFields = new HashMap<>();
-                return staticFields;
-            }
-
-            private Map<BridgeAnnotation.Data, Field> initVirtual() {
-                if (init) throw new IllegalStateException("Cannot @Bridge instance fields after <init>: " + this.name.replace('/', '.') + '.' + name + '(' + src + ')');
-                if (fields == null) fields = new HashMap<>();
-                return fields;
-            }
-
-            @Override
-            public void visitEnd() {
-                super.visitEnd();
-                final int ACC_VALID = ((access & ACC_STATIC) != 0)? BridgeVisitor.ACC_VALID : BridgeVisitor.ACC_VALID & ~ACC_STATIC;
-                if (bridges != null) {
-                    boolean safe, constant = (access & ACC_FINAL) != 0;
-                    for (BridgeAnnotation.Data data : bridges) {
-                        safe = constant && returns.type.equals(data.returns);
-                        FieldVisitor fv = cv.visitField(data.access &= ACC_VALID, data.name, data.desc, data.sig, (safe)? value : null);
-                        data.annotate(fv::visitAnnotation);
-                        fv.visitEnd();
-                        if (!safe || value == null) {
-                            (((data.access & ACC_STATIC) != 0)? initStatic() : initVirtual()).put(data, this);
-                        }
-                    }
-                    BridgeVisitor.this.bridges += bridges.size();
-                }
-            }
-        };
+    public FieldVisitor visitField(int $, String name, String descriptor, String signature, Object value) {
+        return new Field((adjust != null)? adjust.access.getOrDefault(descriptor + name, $) : $, name, descriptor, signature, value);
     }
 
+    @Override
     public MethodVisitor visitMethod(int $, String name, String descriptor, String signature, String[] exceptions) {
-        final int access = (adjust != null && adjust.synthetic.contains(name + descriptor))? $ | ACC_SYNTHETIC : $;
+        final int access = (adjust != null)? adjust.access.getOrDefault(name + descriptor, $) : $;
         return new InvocationVisitor(this, access, name, descriptor, new MethodVisitor(ASM9, super.visitMethod(access, name, descriptor, signature, exceptions)) {
             private final KnownType returns = types.load(Type.getReturnType(descriptor));
             private ArrayList<BridgeAnnotation.Data> bridges;
@@ -147,7 +147,7 @@ final class BridgeVisitor extends ClassVisitor {
                 if (!visible) {
                     if (desc.equals("Lbridge/Bridges;") || desc.equals("Lbridge/Bridge;")) {
                         if (bridges == null) bridges = new ArrayList<>();
-                        return new BridgeAnnotation(access | ACC_SYNTHETIC, name, descriptor, returns.type, data -> bridges.add(data));
+                        return new BridgeAnnotation(ACC_SYNTHETIC | access, name, descriptor, returns.type, bridges::add);
                     } else if (desc.equals("Lbridge/Synthetic;")) {
                         ++adjustments;
                         return null;
@@ -223,11 +223,11 @@ final class BridgeVisitor extends ClassVisitor {
             public void visitEnd() {
                 super.visitEnd();
                 if (bridges != null) {
-                    final int ACC_VALID = ((access & ACC_STATIC) != 0)? BridgeVisitor.ACC_VALID : BridgeVisitor.ACC_VALID & ~ACC_STATIC;
-                    final int ACC_COMPATIBLE = (access & ACC_SYNCHRONIZED) | ((amend)? 0 : ACC_BRIDGE);
+                    final int ACC_VALID = ((access & ACC_STATIC) == 0)? BridgeVisitor.ACC_VALID : BridgeVisitor.ACC_VALID | ACC_STATIC;
+                    final int ACC_COMPATIBLE = (amend)? (access & ACC_SYNCHRONIZED) : (access & ACC_SYNCHRONIZED) | ACC_BRIDGE;
                     final KnownType[] METHOD = types.load(Type.getArgumentTypes(descriptor));
                     for (BridgeAnnotation.Data data : bridges) {
-                        MethodVisitor mv = cv.visitMethod(data.access = (data.access & ACC_VALID) | ACC_COMPATIBLE, data.name, data.desc, data.sig, exceptions);
+                        MethodVisitor mv = cv.visitMethod(data.access = (data.access & ACC_VALID) | ACC_COMPATIBLE, data.name, data.desc, data.sign, exceptions);
                         data.annotate(mv::visitAnnotation);
                         mv.visitCode();
                         mv.visitLabel(new Label());

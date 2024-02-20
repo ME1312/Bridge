@@ -94,16 +94,15 @@ public @interface Bridge {
     int toIndex() default 0;
 
     /**
-     * Specifies how many parameters from the bridge are to be sent to the @annotated method
+     * Specifies how many parameters from the bridge method to send to the @annotated method
      *
      * @return Parameter Amount
      */
     int length() default 255;
 
     /**
-     * Specifies extra signature data
+     * Specifies generic type data
      *
-     * @implNote This is currently used in Java to store generic type definitions
      * @return Signature String
      */
     String signature() default "";

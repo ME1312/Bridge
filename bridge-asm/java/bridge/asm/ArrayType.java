@@ -8,8 +8,8 @@ import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.getType;
 
 public final class ArrayType extends KnownType {
-    public final int depth;
     public final KnownType root, element;
+    public final int depth;
 
     ArrayType(Map<Type, KnownType> arrays, TypeMap types, Type type, Class<?> loaded) {
         super(type);
@@ -31,7 +31,7 @@ public final class ArrayType extends KnownType {
         if ((this.depth = depth) == 0) {
             throw new IllegalArgumentException(desc);
         } else if (depth == 1) {
-            access = ((element = root).access & (ACC_PUBLIC | ACC_PROTECTED | ACC_PRIVATE)) | ACC_ABSTRACT | ACC_FINAL;
+            access = ((element = root).access & (ACC_PUBLIC | ACC_PROTECTED | ACC_PRIVATE)) | (ACC_ABSTRACT | ACC_FINAL);
         } else {
             access = (element = get(arrays, types, getType(desc.substring(1)))).access;
         }
@@ -39,8 +39,8 @@ public final class ArrayType extends KnownType {
 
         final String depthd_m1 = desc.substring(1, depth);
         final String depthd = desc.substring(0, depth);
-        final KnownType extended = root.extended;
-        if (extended != null) {
+        final KnownType extended;
+        if ((extended = root.extended) != null) {
             this.extended = get(arrays, types, getType(depthd + extended.type.getDescriptor()));
         } else {
             this.extended = get(arrays, types, getType(depthd_m1 + "Ljava/lang/Object;"));
@@ -52,8 +52,8 @@ public final class ArrayType extends KnownType {
         while (i != length) {
             implemented[i] = get(arrays, types, getType(depthd + interfaces[i++].type.getDescriptor()));
         }
-        implemented[i]   = get(arrays, types, getType(depthd_m1 + "Ljava/lang/Cloneable;"));
-        implemented[i+1] = get(arrays, types, getType(depthd_m1 + "Ljava/io/Serializable;"));
+        implemented[i++] = get(arrays, types, getType(depthd_m1 + "Ljava/lang/Cloneable;"));
+        implemented[i]   = get(arrays, types, getType(depthd_m1 + "Ljava/io/Serializable;"));
     }
 
     private static KnownType get(Map<Type, KnownType> arrays, TypeMap types, Type type) {

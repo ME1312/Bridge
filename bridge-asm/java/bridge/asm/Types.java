@@ -451,17 +451,22 @@ public final class Types {
                     return;
             }
         }
-        if (b <= INT_SORT && a < b) return;
+        if (b <= INT_SORT && a < b) {
+            if (a == CHAR_SORT && b == BYTE_SORT) {
+                mv.visitInsn(I2B); // char is not smaller than byte
+            }
+            return;
+        }
         if (a <= INT_SORT) {
             switch (b) {
                 case VOID_SORT:
                     mv.visitInsn(POP);
                     return;
-                case BOOLEAN_SORT:
-                 // no additional conversion required
+                case BOOLEAN_SORT: // no conversion required
+
                     return;
-                case CHAR_SORT:
-                    mv.visitInsn(I2C);
+                case CHAR_SORT: // byte is smaller than char
+                    if (a != BYTE_SORT) mv.visitInsn(I2C);
                     return;
                 case BYTE_SORT:
                     mv.visitInsn(I2B);

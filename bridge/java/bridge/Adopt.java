@@ -32,9 +32,8 @@ public @interface Adopt {
     Class<?>[] interfaces() default {};
 
     /**
-     * Adds extra signature data to the class definition
+     * Adds generic type data to the class definition
      *
-     * @implNote This is currently used in Java to store generic type definitions
      * @return Signature String
      */
     String signature() default "";

@@ -8,12 +8,12 @@ import java.util.Objects;
 
 public class KnownType {
     static final KnownType[] EMPTY = new KnownType[0];
-    private Object search;
     public final Type type;
-    KnownType extended;
-    KnownType[] implemented;
+    private Object search;
     int access;
     Object data;
+    KnownType extended;
+    KnownType[] implemented;
 
     KnownType(Type anonymous) {
         this.type = Objects.requireNonNull(anonymous);
@@ -23,15 +23,15 @@ public class KnownType {
         types.map.put(this.type = Objects.requireNonNull(type), this);
         access = loaded.getModifiers();
 
-        final Class<?> extended = loaded.getSuperclass();
-        if (extended != null) {
+        final Class<?> extended;
+        if ((extended = loaded.getSuperclass()) != null) {
             this.extended = types.get(extended);
         } else if (loaded != Object.class && !loaded.isPrimitive()) {
             this.extended = types.get(Object.class);
         }
 
-        final Class<?>[] interfaces = loaded.getInterfaces();
-        if (interfaces.length != 0) {
+        final Class<?>[] interfaces;
+        if ((interfaces = loaded.getInterfaces()).length != 0) {
             final KnownType[] implemented = this.implemented = new KnownType[interfaces.length];
             for (int i = 0, length = interfaces.length; i != length;) {
                 implemented[i] = types.get(interfaces[i++]);
@@ -115,7 +115,7 @@ public class KnownType {
     }
 
     private static final int INDENT = 4;
-    private StringBuilder newline(StringBuilder builder, int indent) {
+    private static StringBuilder newline(StringBuilder builder, int indent) {
         builder.append('\n');
         while (indent != 0) {
             builder.append(' ');
@@ -161,7 +161,7 @@ public class KnownType {
             builder.append('}');
         }
 
-        if (builder.charAt(builder.length() - 1) != '{')
+        if (builder.codePointBefore(builder.length()) != '{')
             newline(builder, indent - INDENT);
         builder.append('}');
     }

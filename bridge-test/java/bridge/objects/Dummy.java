@@ -29,13 +29,13 @@ class Dummy extends Jester {
 
     @Synthetic
     @Bridge(params = {})
-    @Bridge(params = {}, returns = void.class)
+    @Bridge(params = {}, returns = Void.class)
     @Bridge(params = {boolean.class})
-    @Bridge(params = {boolean.class}, returns = void.class)
-    @Bridge(params = {boolean.class, long.class}, returns = void.class)
+    @Bridge(params = {boolean.class}, returns = Void.class)
+    @Bridge(params = {boolean.class, long.class}, returns = Void.class)
     @Bridge(params = {boolean.class, long.class, CharSequence.class})
-    @Bridge(params = {boolean.class, long.class, CharSequence.class}, returns = void.class)
-    @Bridge(params = {long.class}, fromIndex = 1, returns = void.class)
+    @Bridge(params = {boolean.class, long.class, CharSequence.class}, returns = Void.class)
+    @Bridge(params = {long.class}, toIndex = 1, returns = Void.class)
     long v_method(final boolean THROW, final long VALUE) throws NonException {
         if (THROW) throw new NonException();
         return VALUE;
@@ -43,13 +43,13 @@ class Dummy extends Jester {
 
     @Synthetic
     @Bridge(params = {})
-    @Bridge(params = {}, returns = void.class)
+    @Bridge(params = {}, returns = Void.class)
     @Bridge(params = {boolean.class})
-    @Bridge(params = {boolean.class}, returns = void.class)
-    @Bridge(params = {boolean.class, long.class}, returns = void.class)
+    @Bridge(params = {boolean.class}, returns = Void.class)
+    @Bridge(params = {boolean.class, long.class}, returns = Void.class)
     @Bridge(params = {boolean.class, long.class, CharSequence.class})
-    @Bridge(params = {boolean.class, long.class, CharSequence.class}, returns = void.class)
-    @Bridge(params = {long.class}, fromIndex = 1, returns = void.class)
+    @Bridge(params = {boolean.class, long.class, CharSequence.class}, returns = Void.class)
+    @Bridge(params = {long.class}, toIndex = 1, returns = Void.class)
     static long s_method(final boolean THROW, final long VALUE) throws NonException {
         if (THROW) throw new NonException();
         return VALUE;

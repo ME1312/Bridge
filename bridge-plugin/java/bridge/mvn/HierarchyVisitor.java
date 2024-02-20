@@ -5,21 +5,22 @@ import bridge.asm.TypeMap;
 import org.objectweb.asm.*;
 
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.LinkedList;
 
 final class HierarchyVisitor extends HierarchyScanner {
     private static final String[] EMPTY = new String[0];
-    private AdjustmentData adjust;
+    private final AdjustmentData adjust;
 
     HierarchyVisitor(TypeMap types) {
         super(types);
+        data = adjust = new AdjustmentData();
     }
 
     @Override
     public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
         if (!visible) {
             if (desc.equals("Lbridge/Adopt;")) {
-                if (adjust == null) adjust = new AdjustmentData();
                 return new AnnotationVisitor(Opcodes.ASM9) {
                     LinkedList<String> implemented;
                     String extended;
@@ -53,7 +54,7 @@ final class HierarchyVisitor extends HierarchyScanner {
                         if (implemented != null && implemented.size() != 0) {
                             if (!clean && HierarchyVisitor.super.implemented != null && (i = HierarchyVisitor.super.implemented.length) != 0) {
                                 String[] array = HierarchyVisitor.super.implemented = Arrays.copyOf(HierarchyVisitor.super.implemented, i + implemented.size(), String[].class);
-                                for (String element : implemented) array[i++] = element;
+                                for (Iterator<String> it = implemented.iterator(); it.hasNext();) array[i++] = it.next();
                             } else {
                                 HierarchyVisitor.super.implemented = implemented.toArray(new String[0]);
                             }
@@ -66,12 +67,11 @@ final class HierarchyVisitor extends HierarchyScanner {
                             HierarchyVisitor.super.extended = "java/lang/Object";
                         }
                         adjust.signature = signature;
-                        adjust.adopting = true;
+                        adjust.adopted = true;
                     }
                 };
             } else if (desc.equals("Lbridge/Synthetic;")) {
-                if (adjust == null) adjust = new AdjustmentData();
-                adjust.synthetic.add("");
+                access |= Opcodes.ACC_SYNTHETIC;
                 return null;
             }
         }
@@ -80,12 +80,12 @@ final class HierarchyVisitor extends HierarchyScanner {
 
     @Override
     public FieldVisitor visitField(int access, String name, String descriptor, String signature, Object value) {
-        return new FieldVisitor(Opcodes.ASM9) {
+        adjust.access.put(descriptor + name, access);
+        return new FieldVisitor(Opcodes.ASM9, super.visitField(access, name, descriptor, signature, value)) {
             @Override
             public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
                 if (desc.equals("Lbridge/Synthetic;")) {
-                    if (adjust == null) adjust = new AdjustmentData();
-                    adjust.synthetic.add(name);
+                    adjust.access.put(descriptor + name, access | Opcodes.ACC_SYNTHETIC);
                     return null;
                 }
                 return super.visitAnnotation(desc, visible);
@@ -95,22 +95,16 @@ final class HierarchyVisitor extends HierarchyScanner {
 
     @Override
     public MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
-        return new MethodVisitor(Opcodes.ASM9) {
+        adjust.access.put(name + descriptor, access);
+        return new MethodVisitor(Opcodes.ASM9, super.visitMethod(access, name, descriptor, signature, exceptions)) {
             @Override
             public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
                 if (desc.equals("Lbridge/Synthetic;")) {
-                    if (adjust == null) adjust = new AdjustmentData();
-                    adjust.synthetic.add(name + descriptor);
+                    adjust.access.put(name + descriptor, access | Opcodes.ACC_SYNTHETIC);
                     return null;
                 }
                 return super.visitAnnotation(desc, visible);
             }
         };
-    }
-
-    @Override
-    public void visitEnd() {
-        super.data = adjust;
-        super.visitEnd();
     }
 }

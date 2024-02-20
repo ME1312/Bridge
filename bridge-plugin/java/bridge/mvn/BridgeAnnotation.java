@@ -85,7 +85,7 @@ final class BridgeAnnotation extends AnnotationVisitor {
     @Override
     public AnnotationVisitor visitAnnotation(String name, String desc) {
         if (annotations == null) annotations = new LinkedHashMap<>();
-        return annotations.compute(desc, (k, v) -> new Repeater(new LinkedList<>()));
+        return annotations.put(desc, new Repeater(new LinkedList<>()));
     }
 
     private final static class Repeater extends AnnotationVisitor {
@@ -140,7 +140,7 @@ final class BridgeAnnotation extends AnnotationVisitor {
     static final class Data {
         private final Map<String, Repeater> annotations;
         int access;
-        final String name, desc, sig;
+        final String name, desc, sign;
         final int fromIndex, toIndex, length;
         final Type returns;
 
@@ -149,7 +149,7 @@ final class BridgeAnnotation extends AnnotationVisitor {
             this.access = access;
             this.name = name;
             this.desc = descriptor;
-            this.sig = signature;
+            this.sign = signature;
             this.returns = returns;
             this.fromIndex = fromIndex;
             this.toIndex = toIndex;
@@ -159,7 +159,7 @@ final class BridgeAnnotation extends AnnotationVisitor {
         void annotate(BiFunction<String, Boolean, AnnotationVisitor> code) {
             for (Map.Entry<String, Repeater> entry : annotations.entrySet()) {
                 Repeater annotation = entry.getValue();
-                annotation.visit(code.apply(entry.getKey(), true));
+                annotation.visit(code.apply(entry.getKey(), Boolean.TRUE));
                 for (Runnable op : annotation.queue) op.run();
             }
         }

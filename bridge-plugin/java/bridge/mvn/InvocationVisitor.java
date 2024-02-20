@@ -394,19 +394,24 @@ final class InvocationVisitor extends AnalyzerAdapter {
                     }
                 }
 
-                private KnownType primitive() {
-                    Type primitive;
-                    if ((primitive = this.primitive) != null) {
-                        this.ops.removeLast();
-                        this.primitive = null;
-                        return types.load(primitive);
-                    } else {
-                        return stack(OBJECT_SORT, 1);
-                    }
-                }
-
                 private KnownType stack(int sort, int index) {
                     return types.load(get(sort, () -> Type.getObjectType(stack.get(zero + index).toString())));
+                }
+
+                private boolean special(String desc) {
+                    final KnownType owner;
+                    if (!(owner = this.owner).isArray()) {
+                        if (!owner.isInterface()) {
+                            return (owner.equals(caller.type) && (
+                                    caller.adjust == null || (caller.adjust.access.getOrDefault(this.name + desc, ACC_PRIVATE) & ACC_PRIVATE) != 0)
+                            ) || (!caller.type.isInterface() && owner.equals(caller.type.supertype()));
+                        }
+                        final KnownType[] interfaces = caller.type.interfaces();
+                        for (int i = 0, length = interfaces.length; i != length; ++i) {
+                            if (owner.equals(interfaces[i])) return true;
+                        }
+                    }
+                    return false;
                 }
 
                 @Override
@@ -452,21 +457,21 @@ final class InvocationVisitor extends AnalyzerAdapter {
                                 }
                                 break;
                             case "ofField":
-                                if (this.name == null || this.name.length() == 0) {
+                                if (this.name == null || this.name.length() == 0)
                                     throw exception("No field name provided");
-                                } else if (returns != null && returns.type.getSort() == VOID_SORT) {
+                                if (returns != null && returns.type.getSort() == VOID_SORT) {
                                     throw exception("Attempted access of void field");
                                 }
                                 break;
                             case "ofConstructor":
                                 if (virtual != 0)
                                     throw exception("Attempted reinvocation of constructor");
-                                this.name = null;
                                 if (!(returns = this.owner).isArray()) queue(() -> {
                                     mv.visitTypeInsn(NEW, returns.type.getInternalName());
                                     if (casted.type.getSort() == VOID_SORT) returns = casted;
                                     else mv.visitInsn(DUP);
                                 });
+                                this.name = null;
                                 break;
                             case "ofInstanceOf":
                                 if (virtual == 0)
@@ -505,9 +510,17 @@ final class InvocationVisitor extends AnalyzerAdapter {
                                     } else if (primitive == VOID_TYPE) {
                                         this.params.add(consume().type);
                                     } else {
-                                        final KnownType param, arg = primitive();
+                                        final KnownType param, arg;
                                         if ((param = consume()).type == VOID_TYPE) {
                                             throw exception("Attempted use of void argument");
+                                        }
+                                        final Type primitive;
+                                        if ((primitive = this.primitive) != null) {
+                                            this.ops.removeLast();
+                                            this.primitive = null;
+                                            arg = types.load(primitive);
+                                        } else {
+                                            arg = stack(OBJECT_SORT, 1);
                                         }
                                         this.params.add(param.type);
                                         queue(() -> cast(mv, arg, param));
@@ -531,20 +544,23 @@ final class InvocationVisitor extends AnalyzerAdapter {
                                     }
                                 } else if (name.equals("invoke")) {
                                     if (this.name != null) {
+                                        final String desc = Type.getMethodDescriptor(returns.type, this.params.toArray(new Type[0]));
                                         final int INVOKE;
                                         if (virtual == 0) {
-                                            INVOKE = INVOKESTATIC;
-                                        } else if (!this.owner.isInterface() && (this.owner.equals(caller.type) || this.owner.equals(caller.type.supertype()))) {
-                                            INVOKE = INVOKESPECIAL;
+                                            INVOKE = INVOKESTATIC; // static method
+                                        } else if (special(desc)) {
+                                            INVOKE = INVOKESPECIAL; // supertype/private method
+                                        } else if (this.owner.isInterface()) {
+                                            INVOKE = INVOKEINTERFACE; // interface method
                                         } else {
-                                            INVOKE = INVOKEVIRTUAL;
+                                            INVOKE = INVOKEVIRTUAL; // instance method
                                         }
 
-                                        queue(() -> mv.visitMethodInsn(INVOKE, this.owner.type.getInternalName(), this.name, Type.getMethodDescriptor(returns.type, this.params.toArray(new Type[0])), this.owner.isInterface()));
-                                    } else if (!this.owner.isArray()) {
+                                        queue(() -> mv.visitMethodInsn(INVOKE, this.owner.type.getInternalName(), this.name, desc, this.owner.isInterface()));
+                                    } else if (!this.owner.isArray()) { // constructor
                                         queue(() -> mv.visitMethodInsn(INVOKESPECIAL, this.owner.type.getInternalName(), "<init>", Type.getMethodDescriptor(VOID_TYPE, this.params.toArray(new Type[0])), false));
                                     } else {
-                                        queue(() -> {
+                                        queue(() -> { // array constructor
                                             if (casted.type.getSort() == VOID_SORT) throw exception("Invocation does not result in a statement");
                                             final int depth;
                                             if ((depth = this.params.size()) == 0) {

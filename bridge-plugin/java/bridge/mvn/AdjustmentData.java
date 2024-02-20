@@ -1,17 +1,17 @@
 package bridge.mvn;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 
 final class AdjustmentData {
-    final ArrayList<String> synthetic = new ArrayList<>();
+    final HashMap<String, Integer> access = new HashMap<>();
+    boolean adopted;
     String signature;
-    boolean adopting;
 
     @Override
     public String toString() {
         return (
-                "adopting = " + adopting + '\n' +
-                "synthetic = " + synthetic.size() + '\n' +
+                "adopted = " + adopted + '\n' +
+                "members = " + access.size() + '\n' +
                 "signature = " + ((signature == null)? "null" : '"' + signature + '"')
         );
     }
