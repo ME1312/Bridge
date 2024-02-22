@@ -544,23 +544,19 @@ final class InvocationVisitor extends AnalyzerAdapter {
                                     }
                                 } else if (name.equals("invoke")) {
                                     if (this.name != null) {
-                                        final String desc = Type.getMethodDescriptor(returns.type, this.params.toArray(new Type[0]));
-                                        final int INVOKE;
-                                        if (virtual == 0) {
-                                            INVOKE = INVOKESTATIC; // static method
-                                        } else if (special(desc)) {
-                                            INVOKE = INVOKESPECIAL; // supertype/private method
-                                        } else if (this.owner.isInterface()) {
-                                            INVOKE = INVOKEINTERFACE; // interface method
-                                        } else {
-                                            INVOKE = INVOKEVIRTUAL; // instance method
-                                        }
-
-                                        queue(() -> mv.visitMethodInsn(INVOKE, this.owner.type.getInternalName(), this.name, desc, this.owner.isInterface()));
-                                    } else if (!this.owner.isArray()) { // constructor
+                                        queue(() -> {
+                                            final String desc = Type.getMethodDescriptor(returns.type, this.params.toArray(new Type[0]));
+                                            mv.visitMethodInsn(
+                                                    (virtual == 0)? INVOKESTATIC : ((special(desc))? INVOKESPECIAL : ((this.owner.isInterface())? INVOKEINTERFACE : INVOKEVIRTUAL)),
+                                                    this.owner.type.getInternalName(),
+                                                    this.name,
+                                                    desc,
+                                                    this.owner.isInterface());
+                                        });
+                                    } else if (!this.owner.isArray()) {
                                         queue(() -> mv.visitMethodInsn(INVOKESPECIAL, this.owner.type.getInternalName(), "<init>", Type.getMethodDescriptor(VOID_TYPE, this.params.toArray(new Type[0])), false));
                                     } else {
-                                        queue(() -> { // array constructor
+                                        queue(() -> {
                                             if (casted.type.getSort() == VOID_SORT) throw exception("Invocation does not result in a statement");
                                             final int depth;
                                             if ((depth = this.params.size()) == 0) {
