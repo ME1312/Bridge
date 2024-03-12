@@ -48,12 +48,14 @@ public class KnownType {
     public boolean equals(Object type) {
         if (this == type) {
             return true;
-        } else if (type instanceof Type) {
-            return type.equals(this.type);
         } else if (type instanceof KnownType) {
             return ((KnownType) type).type.equals(this.type);
+        } else if (type instanceof Type) {
+            return type.equals(this.type);
         } else if (type instanceof Class) {
             return Type.getType((Class<?>) type).equals(this.type);
+        } else if (type instanceof CharSequence) {
+            return type.equals(this.type.getDescriptor());
         } else {
             return false;
         }
@@ -72,10 +74,13 @@ public class KnownType {
     }
 
     public boolean extended(KnownType type) {
-        final KnownType extended;
-        return type != null && (
-            type == this || type.type.equals(this.type) || ((extended = this.extended) != null && extended.extended(type))
-        );
+        if (type != null) {
+            KnownType extended = this;
+            do {
+                if (type == extended || type.type.equals(extended.type)) return true;
+            } while ((extended = extended.extended) != null);
+        }
+        return false;
     }
 
     public KnownType[] interfaces() {

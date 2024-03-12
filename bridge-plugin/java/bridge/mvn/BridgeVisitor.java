@@ -4,8 +4,8 @@ import bridge.asm.KnownType;
 import bridge.asm.TypeMap;
 import org.objectweb.asm.*;
 
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -13,14 +13,12 @@ import static bridge.asm.Types.*;
 import static org.objectweb.asm.Opcodes.*;
 
 final class BridgeVisitor extends ClassVisitor {
-    private static final int ACC_VALID = ACC_PUBLIC | ACC_PROTECTED | ACC_PRIVATE | ACC_FINAL | ACC_SYNTHETIC | ACC_TRANSIENT | ACC_VARARGS;
-    private Map<BridgeAnnotation.Data, Field> staticFields;
-    private Map<BridgeAnnotation.Data, Field> fields;
-    private boolean isInterface, clinit, init;
+    private Map<BridgeAnnotation.Data, Field> clfields, fields;
+    private boolean clinit, init;
     final TypeMap types;
 
     KnownType type;
-    AdjustmentData adjust;
+    BridgeData data;
     HashMap<Integer, Boolean> forks = new HashMap<>();
     String adopt, name, src = "Unknown Source";
     int version, bridges, invocations, adjustments;
@@ -33,19 +31,18 @@ final class BridgeVisitor extends ClassVisitor {
     @Override
     public void visit(int version, int access, String name, String signature, String extended, String[] implemented) {
         KnownType type = this.type = types.loadClass(this.name = name);
-        AdjustmentData adjust = this.adjust = (AdjustmentData) type.data();
-        if (adjust != null) {
-            if (adjust.adopted) {
+        BridgeData data = this.data = (BridgeData) type.data();
+        if (data != null) {
+            if (data.adopted) {
                 final KnownType[] interfaces;
                 int i = 0, length = (interfaces = type.interfaces()).length;
                 if (implemented == null || implemented.length != length) implemented = new String[length];
                 while (i != length) implemented[i] = interfaces[i++].type.getInternalName();
                 extended = adopt = type.supertype().type.getInternalName();
-                signature = adjust.signature;
+                signature = data.signature;
             }
             access = type.modifiers();
-        }
-        this.isInterface = (access & ACC_INTERFACE) != 0;
+        } else this.data = new BridgeData();
         this.forks.put(this.version = version - 44, Boolean.FALSE);
         super.visit(version, access, name, signature, extended, implemented);
     }
@@ -65,7 +62,6 @@ final class BridgeVisitor extends ClassVisitor {
     }
 
     private final class Field extends FieldVisitor {
-        private ArrayList<BridgeAnnotation.Data> bridges;
         final int access;
         final String name, desc;
         final KnownType returns;
@@ -82,22 +78,20 @@ final class BridgeVisitor extends ClassVisitor {
 
         @Override
         public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
-            if (!visible) {
-                if (desc.equals("Lbridge/Bridges;") || desc.equals("Lbridge/Bridge;")) {
-                    if (bridges == null) bridges = new ArrayList<>();
-                    return new BridgeAnnotation(ACC_TRANSIENT | ACC_SYNTHETIC | access, name, this.desc, returns.type, bridges::add);
-                } else if (desc.equals("Lbridge/Synthetic;")) {
+            if (!visible) switch (desc) {
+                case "Lbridge/Synthetic;":
                     ++adjustments;
+                case "Lbridge/Bridges;":
+                case "Lbridge/Bridge;":
                     return null;
-                }
             }
             return super.visitAnnotation(desc, visible);
         }
 
         private Map<BridgeAnnotation.Data, Field> initStatic() {
             if (clinit) throw new IllegalStateException("Attempted @Bridge to static field after <clinit>: " + this.name.replace('/', '.') + '.' + name + '(' + src + ')');
-            if (staticFields == null) staticFields = new HashMap<>();
-            return staticFields;
+            if (clfields == null) clfields = new HashMap<>();
+            return clfields;
         }
 
         private Map<BridgeAnnotation.Data, Field> initVirtual() {
@@ -109,12 +103,12 @@ final class BridgeVisitor extends ClassVisitor {
         @Override
         public void visitEnd() {
             super.visitEnd();
-            final int ACC_VALID = ((access & ACC_STATIC) == 0)? BridgeVisitor.ACC_VALID : BridgeVisitor.ACC_VALID | ACC_STATIC;
-            if (bridges != null) {
+            final LinkedList<BridgeAnnotation.Data> bridges;
+            if ((bridges = data.bridges.get(desc + name)) != null) {
                 boolean safe, constant = (access & ACC_FINAL) != 0;
                 for (BridgeAnnotation.Data data : bridges) {
                     safe = constant && returns.type.equals(data.returns);
-                    FieldVisitor fv = cv.visitField(data.access &= ACC_VALID, data.name, data.desc, data.sign, (safe)? value : null);
+                    FieldVisitor fv = cv.visitField(data.access, data.name, data.desc, data.sign, (safe)? value : null);
                     data.annotate(fv::visitAnnotation);
                     fv.visitEnd();
                     if (!safe || value == null) {
@@ -128,30 +122,26 @@ final class BridgeVisitor extends ClassVisitor {
 
     @Override
     public FieldVisitor visitField(int $, String name, String descriptor, String signature, Object value) {
-        return new Field((adjust != null)? adjust.access.getOrDefault(descriptor + name, $) : $, name, descriptor, signature, value);
+        return new Field(data.members.getOrDefault(descriptor + name, $), name, descriptor, signature, value);
     }
 
     @Override
     public MethodVisitor visitMethod(int $, String name, String descriptor, String signature, String[] exceptions) {
-        final int access = (adjust != null)? adjust.access.getOrDefault(name + descriptor, $) : $;
+        final int access = data.members.getOrDefault(name + descriptor, $);
         return new InvocationVisitor(this, access, name, descriptor, new MethodVisitor(ASM9, super.visitMethod(access, name, descriptor, signature, exceptions)) {
             private final KnownType returns = types.load(Type.getReturnType(descriptor));
-            private ArrayList<BridgeAnnotation.Data> bridges;
             private final boolean amend = name.equals("<init>");
-            private final boolean adopt = BridgeVisitor.this.adopt != null;
             private boolean safe = true;
             private int occ = 0;
 
             @Override
             public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
-                if (!visible) {
-                    if (desc.equals("Lbridge/Bridges;") || desc.equals("Lbridge/Bridge;")) {
-                        if (bridges == null) bridges = new ArrayList<>();
-                        return new BridgeAnnotation(ACC_SYNTHETIC | access, name, descriptor, returns.type, bridges::add);
-                    } else if (desc.equals("Lbridge/Synthetic;")) {
+                if (!visible) switch (desc) {
+                    case "Lbridge/Synthetic;":
                         ++adjustments;
+                    case "Lbridge/Bridges;":
+                    case "Lbridge/Bridge;":
                         return null;
-                    }
                 }
                 return super.visitAnnotation(desc, visible);
             }
@@ -170,9 +160,8 @@ final class BridgeVisitor extends ClassVisitor {
                     } else if (amend) {
                         if (BridgeVisitor.this.name.equals(owner)) {
                             safe = false;
-                        } else if (adopt) {
-                            super.visitMethodInsn(opcode, BridgeVisitor.this.adopt, name, desc, isInterface);
-                            return;
+                        } else if (adopt != null) {
+                            owner = adopt;
                         }
                     }
                 }
@@ -188,7 +177,7 @@ final class BridgeVisitor extends ClassVisitor {
                         map = fields;
                     } else if (name.equals("<clinit>")) {
                         clinit = true;
-                        map = staticFields;
+                        map = clfields;
                     } else {
                         map = null;
                     }
@@ -222,12 +211,11 @@ final class BridgeVisitor extends ClassVisitor {
             @Override
             public void visitEnd() {
                 super.visitEnd();
-                if (bridges != null) {
-                    final int ACC_VALID = ((access & ACC_STATIC) == 0)? BridgeVisitor.ACC_VALID : BridgeVisitor.ACC_VALID | ACC_STATIC;
-                    final int ACC_COMPATIBLE = (amend)? (access & ACC_SYNCHRONIZED) : (access & ACC_SYNCHRONIZED) | ACC_BRIDGE;
+                final LinkedList<BridgeAnnotation.Data> bridges;
+                if ((bridges = data.bridges.get(name + descriptor)) != null) {
                     final KnownType[] METHOD = types.load(Type.getArgumentTypes(descriptor));
                     for (BridgeAnnotation.Data data : bridges) {
-                        MethodVisitor mv = cv.visitMethod(data.access = (data.access & ACC_VALID) | ACC_COMPATIBLE, data.name, data.desc, data.sign, exceptions);
+                        MethodVisitor mv = cv.visitMethod(data.access, data.name, data.desc, data.sign, data.ex);
                         data.annotate(mv::visitAnnotation);
                         mv.visitCode();
                         mv.visitLabel(new Label());
@@ -262,7 +250,7 @@ final class BridgeVisitor extends ClassVisitor {
                         }
 
                         // method -> bridge
-                        mv.visitMethodInsn(invoke, BridgeVisitor.this.name, name, descriptor, isInterface);
+                        mv.visitMethodInsn(invoke, BridgeVisitor.this.name, name, descriptor, type.isInterface());
                         cast(mv, this.returns, types.load(data.returns));
                         mv.visitInsn(data.returns.getOpcode(IRETURN));
                         mv.visitMaxs(0, 0);
@@ -286,7 +274,7 @@ final class BridgeVisitor extends ClassVisitor {
     @Override
     public void visitEnd() {
         if (!init && fields != null) this.visitSpecial(ACC_PUBLIC, "<init>");
-        if (!clinit && staticFields != null) this.visitSpecial(ACC_STATIC, "<clinit>");
+        if (!clinit && clfields != null) this.visitSpecial(ACC_STATIC, "<clinit>");
         super.visitEnd();
     }
 }

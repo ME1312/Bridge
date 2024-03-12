@@ -159,14 +159,14 @@ public final class DebugVisitor extends MethodVisitor {
     public void visitMaxs(int maxStack, int maxLocals) {
         out.println();
         out.println();
-        if (!handlers.isEmpty()) {
+        if (handlers.size() != 0) {
             out.println("Exception handlers:");
             for (String handler : handlers) {
                 out.println(handler);
             }
             out.println();
         }
-        if (!locals.isEmpty()) {
+        if (locals.size() != 0) {
             out.println("Local variables:");
             for (String local : locals) {
                 out.println(local);

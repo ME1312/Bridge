@@ -266,7 +266,6 @@ final class InvocationVisitor extends AnalyzerAdapter {
                     if (stack.size() == one && descriptor.endsWith(")V")) {
                         if (state == Boolean.TRUE) stack.set(one - 3, stack.get(one - 1));
                         InvocationVisitor.this.mv = mv;
-                        ++caller.adjustments;
                     } else {
                         super.visitMethodInsn(opcode, owner, name, descriptor, isInterface);
                     }
@@ -402,8 +401,8 @@ final class InvocationVisitor extends AnalyzerAdapter {
                     final KnownType owner;
                     if (!(owner = this.owner).isArray()) {
                         if (!owner.isInterface()) {
-                            return (owner.equals(caller.type) && (
-                                    caller.adjust == null || (caller.adjust.access.getOrDefault(this.name + desc, ACC_PRIVATE) & ACC_PRIVATE) != 0)
+                            return (owner.equals(caller.type) &&
+                                    (caller.data.members.getOrDefault(this.name + desc, ACC_PRIVATE) & ACC_PRIVATE) != 0
                             ) || (!caller.type.isInterface() && owner.equals(caller.type.supertype()));
                         }
                         final KnownType[] interfaces = caller.type.interfaces();
@@ -546,12 +545,12 @@ final class InvocationVisitor extends AnalyzerAdapter {
                                     if (this.name != null) {
                                         queue(() -> {
                                             final String desc = Type.getMethodDescriptor(returns.type, this.params.toArray(new Type[0]));
-                                            mv.visitMethodInsn(
-                                                    (virtual == 0)? INVOKESTATIC : ((special(desc))? INVOKESPECIAL : ((this.owner.isInterface())? INVOKEINTERFACE : INVOKEVIRTUAL)),
+                                            mv.visitMethodInsn((virtual == 0)? INVOKESTATIC : (special(desc))? INVOKESPECIAL : (this.owner.isInterface())? INVOKEINTERFACE : INVOKEVIRTUAL,
                                                     this.owner.type.getInternalName(),
                                                     this.name,
                                                     desc,
-                                                    this.owner.isInterface());
+                                                    this.owner.isInterface()
+                                            );
                                         });
                                     } else if (!this.owner.isArray()) {
                                         queue(() -> mv.visitMethodInsn(INVOKESPECIAL, this.owner.type.getInternalName(), "<init>", Type.getMethodDescriptor(VOID_TYPE, this.params.toArray(new Type[0])), false));

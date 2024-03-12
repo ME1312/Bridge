@@ -123,7 +123,7 @@ public final class BridgeMojo extends AbstractMojo {
                     if (log.isDebugEnabled()) log.debug(" + " + file);
                     unique.add(path.replace(File.separatorChar, '/'));
                     try (FileInputStream fis = new FileInputStream(file)) {
-                        new ClassReader(fis).accept(new HierarchyVisitor(types), ClassReader.SKIP_CODE | ClassReader.SKIP_FRAMES | ClassReader.SKIP_DEBUG);
+                        new ClassReader(fis).accept(new BridgeScanner(types), ClassReader.SKIP_CODE | ClassReader.SKIP_FRAMES | ClassReader.SKIP_DEBUG);
                     }
                 }
             }

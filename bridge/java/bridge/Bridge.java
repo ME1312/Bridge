@@ -98,7 +98,14 @@ public @interface Bridge {
      *
      * @return Parameter Amount
      */
-    int length() default 255;
+    int length() default Integer.MAX_VALUE;
+
+    /**
+     * Specifies different checked exceptions
+     *
+     * @return Checked Exception List
+     */
+    Class<? extends Throwable>[] exceptions() default Unchecked.class;
 
     /**
      * Specifies generic type data
@@ -115,9 +122,8 @@ public @interface Bridge {
     Class<?> returns() default Bridges.class;
 
     /**
-     * Specifies that this bridge is <code>@Deprecated</code> when present
+     * Specifies that this bridge is <code>@Deprecated</code>
      *
-     * @see Deprecated @Deprecated
      * @return Deprecation Status
      */
     Deprecated status() default @Deprecated;

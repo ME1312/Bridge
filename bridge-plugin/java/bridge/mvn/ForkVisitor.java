@@ -210,7 +210,7 @@ public final class ForkVisitor extends ClassVisitor {
             private boolean merged(Block next) {
                 for (Block block = this;;) {
                     if ((block = block.dereference()) == next) return true;
-                    if (!block.ops.isEmpty()) return false;
+                    if ((block.ops.size() != 0)) return false;
                     if ((block = block.next) == null) return true;
                 }
             }
@@ -290,18 +290,18 @@ public final class ForkVisitor extends ClassVisitor {
                 if (info.handlers != null) for (Runnable handler : info.handlers) {
                     handler.run();
                 }
-                if (!ops.isEmpty() || block.fop != 0) {
+                if (ops.size() != 0 || block.fop != 0) {
                     blocks.add(this.block = block = block.next = info);
                     block.ops = ops = new LinkedList<>();
                 }
                 else block.merge(info);
             } else {
-                if (!ops.isEmpty() || block.fop != 0) {
+                if (ops.size() != 0 || block.fop != 0) {
                     blocks.add(this.block = block = block.next = new Block());
                     block.ops = ops = new LinkedList<>();
                 }
             }
-            if (!this.handlers.isEmpty()) {
+            if (this.handlers.size() != 0) {
                 if (block.branches == null) block.branches = new LinkedList<>();
                 for (Iterator<LinkedHashMap<Runnable, Block>> it = this.handlers.values().iterator(); it.hasNext();) {
                     block.branches.addAll(it.next().values());
@@ -370,7 +370,7 @@ public final class ForkVisitor extends ClassVisitor {
             for (Block block = blocks.getFirst();;) {
                 if (!block.used) {
                     block.used = true;
-                    if (block.branches != null && !block.ops.isEmpty()) {
+                    if (block.branches != null && block.ops.size() != 0) {
                         branches.addAll(block.branches);
                     }
                     if ((block = block.next) != null) {
@@ -378,7 +378,7 @@ public final class ForkVisitor extends ClassVisitor {
                         continue;
                     }
                 }
-                if (branches.isEmpty()) break;
+                if (branches.size() == 0) break;
                 block = branches.removeFirst().dereference();
             }
 
